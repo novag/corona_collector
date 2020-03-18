@@ -1,0 +1,10 @@
+{
+    "user_agent": "Mozilla/5.0 (compatible; corona_fetcher/1.0)",
+    "db": {
+        "host": "localhost",
+        "port": 8086,
+        "user": "",
+        "password": "",
+        "database": ""
+    }
+}
