@@ -31,16 +31,16 @@ with open(POPULATION_PATH, encoding='utf-8') as file:
 def notify(msg):
     print(msg)
 
-    if 'pb_token' not in CONFIG:
+    if 'pushover' not in CONFIG:
         return
 
     requests.post(
-        'https://api.pushbullet.com/v2/pushes',
-        headers={'Access-Token': CONFIG['pb_token']},
+        'https://api.pushover.net/1/messages.json',
         json={
-            'type': 'note',
+            'token': CONFIG['pushover']['token'],
+            'user': CONFIG['pushover']['user'],
             'title': 'Corona {}: Fehler!'.format(STATE_SHORT),
-            'body': msg
+            'message': msg
         }
     )
 
