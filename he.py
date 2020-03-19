@@ -106,7 +106,7 @@ class CoronaParser:
             if not cells:
                 continue
 
-            if cells[0] == 'Landkreis/Stadt':
+            if cells[0] == 'Kreis/Stadt' or cells[0] == 'Gesamt':
                 continue
 
             county = cells[0].strip()
