@@ -117,8 +117,8 @@ class CoronaParser:
             if cells[0] == 'Gesamtergebnis':
                 break
 
-            county = cells[0]
-            infected_str = cells[1]
+            county = cells[0].strip()
+            infected_str = cells[1].strip()
 
             infected = int(infected_str)
 
@@ -146,8 +146,8 @@ class CoronaParser:
             if cells[0] == 'Gesamtergebnis':
                 break
 
-            county = cells[0]
-            infected_str = cells[1]
+            county = cells[0].strip()
+            infected_str = cells[1].strip()
 
             infected = int(infected_str)
             infected_sum += infected

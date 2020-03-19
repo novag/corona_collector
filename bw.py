@@ -120,16 +120,15 @@ class CoronaParser:
         data = []
         infected_sum = 0
         for row in self.ws.iter_rows(min_col=self.ws.min_column, min_row=county_row, max_row=self.ws.max_row, max_col=self.ws.min_column + 1):
-            county = row[0].value
-            infected_str = row[1].value
+            county = row[0].value.strip()
 
-            if not county or not infected_str:
+            if not county:
                 continue
 
             if county == 'Summe':
                 break
 
-            infected = int(infected_str)
+            infected = row[1].value
             infected_sum += infected
 
             data.append({

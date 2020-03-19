@@ -66,8 +66,6 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _raw_county(self, county):
-        county = county.strip()
-
         county = county.replace(' (Kreis)', '')
 
         county = county.replace('Mülheim / Ruhr', 'Mülheim an der Ruhr')
@@ -111,8 +109,8 @@ class CoronaParser:
             if not cells:
                 continue
 
-            county = cells[0]
-            infected_str = cells[1]
+            county = cells[0].strip()
+            infected_str = cells[1].strip()
 
             try:
                 infected = int(infected_str)

@@ -116,8 +116,8 @@ class CoronaParser:
             if not cells:
                 continue
 
-            county = cells[0].replace('\xa0', '')
-            infected_str = cells[1].replace('\xa0', '')
+            county = cells[0].replace('\xa0', '').strip()
+            infected_str = cells[1].replace('\xa0', '').strip()
 
             if county == 'Landkreis':
                 continue
@@ -144,8 +144,8 @@ class CoronaParser:
             if not cells:
                 continue
 
-            county = cells[0].replace('\xa0', '')
-            infected_str = cells[1].replace('\xa0', '')
+            county = cells[0].replace('\xa0', '').strip()
+            infected_str = cells[1].replace('\xa0', '').strip()
 
             if county == 'Stadt':
                 continue

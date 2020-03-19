@@ -114,8 +114,8 @@ class CoronaParser:
             if cells[0] == 'Landkreis/Stadt':
                 continue
 
-            county = cells[0]
-            infected_str = cells[-1]
+            county = cells[0].strip()
+            infected_str = cells[-1].strip()
 
             try:
                 infected = int(infected_str)
