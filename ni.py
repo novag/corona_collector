@@ -66,8 +66,6 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _raw_county(self, county):
-        county = county.split(' (+')[0]
-
         county = county.replace('Nienburg (Weser)', 'Nienburg/Weser')
         county = county.replace('Rotenburg/Wümme', 'Rotenburg (Wümme)')
 
@@ -130,16 +128,18 @@ class CoronaParser:
                 is_county = True
                 continue
 
+            county = text.split(' (+')[0]
+
             data.append({
                 'measurement': 'infected_de_state',
                 'tags': {
                     'state': STATE,
-                    'county': text
+                    'county': county
                 },
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(text, infected, is_county)
+                    'p10k': self._calculate_p10k(county, infected, is_county)
                 }
             })
 
