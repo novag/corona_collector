@@ -66,6 +66,7 @@ class CoronaParser:
         county = county.replace('Weiden Stadt', 'Weiden in der Oberpfalz')
 
         county = county.replace('Bad Tölz', 'Bad Tölz-Wolfratshausen')
+        county = county.replace('Dillingen a.d. Donau', 'Dillingen an der Donau')
         county = county.replace('Mühldorf a.Inn', 'Mühldorf am Inn')
         county = county.replace('Neumarkt i.d.Opf.', 'Neumarkt in der Oberpfalz')
         county = county.replace('Neustadt a.d. Aisch-Bad Windsheim', 'Neustadt an der Aisch-Bad Windsheim')
