@@ -110,7 +110,7 @@ class CoronaParser:
                 continue
 
             county = cells[0].strip()
-            infected_str = cells[-1].strip()
+            infected_str = cells[1].strip()
 
             try:
                 infected = int(infected_str)
