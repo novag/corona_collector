@@ -66,28 +66,23 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _raw_county(self, county):
-        county = county.replace('Offenbach (Stadt)', 'Offenbach am Main')
-        county = county.replace('Frankfurt', 'Frankfurt am Main')
+        county = county.replace('SK Offenbach', 'Offenbach am Main')
 
-        county = county.replace(' (Stadt)', '')
-        county = county.replace(' (Landkreis)', '')
+        county = county.replace('LK ', '')
+        county = county.replace('SK ', '')
 
         return county
-
-    def _city_fix(self, county):
-        return county == 'Frankfurt'
 
     def _calculate_p10k(self, county, infected):
         county_raw = self._raw_county(county)
 
         try:
-            if county == 'Region Kassel Stadt und LK':
-                population = POPULATION['city'][STATE_SHORT]['Kassel']
-                population += POPULATION['county'][STATE_SHORT]['Kassel']
-            elif county.endswith('(Stadt)') or self._city_fix(county):
+            if county.startswith('LK '):
+                population = POPULATION['county'][STATE_SHORT][county_raw]
+            elif county.startswith('SK '):
                 population = POPULATION['city'][STATE_SHORT][county_raw]
             else:
-                population = POPULATION['county'][STATE_SHORT][county_raw]
+                raise ValueError('ERROR: CoronaParser: _calculate_p10k: unknown county format')
 
             return round(infected * 10000 / population, 2)
         except:
