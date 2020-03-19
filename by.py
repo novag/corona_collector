@@ -97,8 +97,8 @@ class CoronaParser:
         dt = datetime.strptime(dt_text, '*Stand: %d.%m.%Y %H:%M Uhr.').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         tables = self.tree.xpath('//table')
-        counties_table = tables[0]
-        district_table = tables[1]
+        counties_table = tables[1]
+        district_table = tables[2]
 
         if counties_table.xpath('.//tr')[0].xpath('.//th/span/text()')[0] != 'Land-/Stadtkreis':
             raise Exception('ERROR: Landkreis table not found')
