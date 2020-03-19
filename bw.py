@@ -3,12 +3,14 @@
 import influxdb
 import io
 import json
+import locale
 import os
 import openpyxl
 import requests
 import sys
 import traceback
 from datetime import datetime
+from lxml import html
 
 
 DEBUG = False
@@ -45,10 +47,13 @@ def notify(msg):
 
 
 class CoronaParser:
-    def __init__(self, db, doc_bytes):
+    def __init__(self, db, tree, doc_bytes):
         self.db = db
+        self.tree = tree
         self.wb = openpyxl.load_workbook(doc_bytes)
         self.ws = self.wb['Fälle Coronavirus in BW']
+
+        locale.setlocale(locale.LC_TIME, "de_DE.utf8")
 
     def _store(self, data):
         if DEBUG:
@@ -63,8 +68,12 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _parse_datetime(self, cell):
-        self.dt = datetime.strptime(cell.value, 'Stand: %d.%m.%Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+    def _parse_web_datetime(self):
+        dt_text = self.tree.xpath('normalize-space(//figcaption/text())').split('(')[-1]
+        date = datetime.strptime(dt_text, 'Stand: %d. %B %Y, %H:%M Uhr)')
+        self.dt = date.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        return date
 
     def _raw_county(self, county):
         return county.replace(' (Stadtkreis)', '')
@@ -97,13 +106,16 @@ class CoronaParser:
             if not cell_a.value:
                 continue
 
-            if cell_a.value.startswith('Stand:'):
-                dt_row = cell_a.row
-            elif cell_a.value.startswith('Stadt-/Landkreis'):
-                county_row = cell_a.row + 1
+            if cell_a.value.startswith('Stadt-/Landkreis'):
+                dt_row = cell_a.row + 1
+                county_row = cell_a.row + 2
                 break
 
-        self._parse_datetime(self.ws['A'][dt_row - 1])
+        excel_dt = self.ws['B'][dt_row - 1].value
+        web_dt = self._parse_web_datetime()
+
+        if excel_dt.date() != web_dt.date():
+            raise Exception('WARN: Date mismatch: No datetime available yet. Skipping run...')
 
         data = []
         infected_sum = 0
@@ -149,13 +161,27 @@ class CoronaParser:
         return self.dt
 
 
-data_url = 'https://sozialministerium.baden-wuerttemberg.de/fileadmin/redaktion/m-sm/intern/downloads/Downloads_Gesundheitsschutz/Tabelle_Coronavirus-Faelle-BW.xlsx'
+data_url = 'https://sozialministerium.baden-wuerttemberg.de/de/gesundheit-pflege/gesundheitsschutz/infektionsschutz-hygiene/informationen-zu-coronavirus/'
 if len(sys.argv) == 2:
     data_url = sys.argv[1]
 
-r = requests.get(data_url, headers={'User-Agent': CONFIG['user_agent']})
-if not r.ok:
-    print('ERROR: failed to fetch data, status code: {}'.format(r.stats_code))
+r_web = requests.get(data_url, headers={'User-Agent': CONFIG['user_agent']})
+if not r_web.ok:
+    print('ERROR: failed to fetch data, status code: {}'.format(r.status_code))
+    sys.exit(1)
+
+try:
+    tree = html.fromstring(r_web.text)
+    table_url = tree.xpath('//a[@class="link-download" and contains(@href, ".xlsx")]/@href')[0]
+    table_url = 'https://sozialministerium.baden-wuerttemberg.de/{}'.format(table_url)
+except Exception as e:
+    traceback.print_exc()
+    notify(str(e))
+    sys.exit(1)
+
+r_excel = requests.get(table_url, headers={'User-Agent': CONFIG['user_agent']})
+if not r_excel.ok:
+    print('ERROR: failed to fetch excel workbook, status code: {}'.format(r_excel.status_code))
     sys.exit(1)
 
 if DEBUG:
@@ -169,7 +195,7 @@ else:
     )
     db_client.switch_database(CONFIG['db']['database'])
 
-corona_parser = CoronaParser(db_client, io.BytesIO(r.content))
+corona_parser = CoronaParser(db_client, tree, io.BytesIO(r_excel.content))
 
 try:
     dt = corona_parser.parse()
