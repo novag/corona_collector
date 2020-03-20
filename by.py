@@ -94,23 +94,23 @@ class CoronaParser:
         return None
 
     def parse(self):
-        dt_text = self.tree.xpath('//p[@class="bildunterschrift"]/strong/text()')[0]
+        dt_text = self.tree.xpath('//p[@class="bildunterschrift"]/strong/text()')[1]
         dt = datetime.strptime(dt_text, '*Stand: %d.%m.%Y %H:%M Uhr.').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        tables = self.tree.xpath('//table')
-        counties_table = tables[1]
-        district_table = tables[2]
+        tables = self.tree.xpath('//div[@class="row abstand_unten"]//table')
+        counties_table = tables[0]
+        district_table = tables[1]
 
-        if counties_table.xpath('.//tr')[0].xpath('.//th/span/text()')[0] != 'Land-/Stadtkreis':
+        if counties_table.xpath('tr')[0].xpath('th/span/text()')[0] != 'Land-/Stadtkreis':
             raise Exception('ERROR: Landkreis table not found')
 
-        if district_table.xpath('.//tr')[0].xpath('.//th/text()')[0] != 'Regierungsbezirk':
+        if district_table.xpath('tr')[0].xpath('th/text()')[0] != 'Regierungsbezirk':
             raise Exception('ERROR: Regierungsbezirk table not found')
 
         # Counties
         data = []
-        for row in counties_table.xpath('.//tr'):
-            cells = row.xpath('.//td/text()')
+        for row in counties_table.xpath('tr'):
+            cells = row.xpath('td/text()')
 
             if not cells:
                 continue
