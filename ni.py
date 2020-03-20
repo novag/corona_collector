@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+import csv
 import influxdb
 import io
 import json
 import os
-import locale
 import requests
 import sys
 import traceback
@@ -46,11 +46,10 @@ def notify(msg):
 
 
 class CoronaParser:
-    def __init__(self, db, tree):
+    def __init__(self, db, html_text, csv_content):
         self.db = db
-        self.tree = tree
-
-        locale.setlocale(locale.LC_TIME, "de_DE.utf8")
+        self.tree = html.fromstring(html_text)
+        self.data = list(csv.DictReader(csv_content.decode('utf-8').splitlines(), delimiter=';'))
 
     def _store(self, data):
         if DEBUG:
@@ -66,22 +65,26 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _raw_county(self, county):
+        county = county.replace('LK ', '')
+        county = county.replace('SK ', '')
+
         county = county.replace('Nienburg (Weser)', 'Nienburg/Weser')
-        county = county.replace('Rotenburg/Wümme', 'Rotenburg (Wümme)')
 
         return county
 
-    def _calculate_p10k(self, county, infected, is_county):
+    def _calculate_p10k(self, county, infected):
         county_raw = self._raw_county(county)
 
         try:
             if county == 'Region Hannover':
                 population = POPULATION['city'][STATE_SHORT]['Hannover']
                 population += POPULATION['county'][STATE_SHORT]['Hannover']
-            elif is_county:
+            elif county.startswith('LK '):
                 population = POPULATION['county'][STATE_SHORT][county_raw]
-            else:
+            elif county.startswith('SK '):
                 population = POPULATION['city'][STATE_SHORT][county_raw]
+            else:
+                raise ValueError('ERROR: CoronaParser: _calculate_p10k: unknown county format')
 
             return round(infected * 10000 / population, 2)
         except:
@@ -90,45 +93,18 @@ class CoronaParser:
         return None
 
     def parse(self):
-        counties_div = self.tree.xpath('//div[@class="group complementary span1of4"]//div[@class="content"]')[0]
-
-        dt_text = counties_div.xpath('normalize-space(p/i/text())')
-        try:
-            dt = datetime.strptime(dt_text, 'zuletzt aktualisiert am %d.%m.%Y, %H Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
-        except ValueError:
-            dt = datetime.strptime(dt_text, 'zuletzt aktualisiert am %d.%m.%Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        elements = counties_div.xpath('p[4]/descendant-or-self::*/text()')
-
-        if not elements[0].startswith('Alle registrierten'):
-            raise Exception('ERROR: Landkreis paragraph not found')
+        dt_text = self.tree.xpath('//p/b/text()')[0]
+        dt = datetime.strptime(dt_text, 'Datenstand: %d.%m.%Y %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         # Counties
         data = []
         infected_sum = 0
+        for row in self.data:
+            county = row['Landkreis'].strip()
+            infected_str = row['bestätigte Fälle'].strip()
 
-        infected = None
-        is_county = True
-        for text in elements[1:]:
-            text = text.strip()
-
-            if not text or text.startswith('('):
-                continue
-
-            if text.startswith('Hinweis') or text.startswith('Hier'):
-                break
-
-            if 'Fall i' in text or 'Fälle i' in text:
-                infected = int(text.split(' ')[0])
-                infected_sum += infected
-                is_county = text.endswith('LK')
-                continue
-
-            if text == 'LK':
-                is_county = True
-                continue
-
-            county = text.split(' (+')[0]
+            infected = int(infected_str)
+            infected_sum += infected
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -139,7 +115,7 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected, is_county)
+                    'p10k': self._calculate_p10k(county, infected)
                 }
             })
 
@@ -159,13 +135,22 @@ class CoronaParser:
         return dt
 
 
-data_url = 'https://www.niedersachsen.de/Coronavirus'
-if len(sys.argv) == 2:
+data_url = 'https://www.apps.nlga.niedersachsen.de/corona/iframe.php'
+if len(sys.argv) == 3:
     data_url = sys.argv[1]
 
-r = requests.get(data_url, headers={'User-Agent': CONFIG['user_agent']})
-if not r.ok:
-    print('ERROR: failed to fetch data, status code: {}'.format(r.stats_code))
+r_web = requests.get(data_url, headers={'User-Agent': CONFIG['user_agent']})
+if not r_web.ok:
+    print('ERROR: failed to fetch data, status code: {}'.format(r.status_code))
+    sys.exit(1)
+
+csv_url = 'https://www.apps.nlga.niedersachsen.de/corona/download.php?csv-file'
+if len(sys.argv) == 3:
+    csv_url = sys.argv[2]
+
+r_csv = requests.get(csv_url, headers={'User-Agent': CONFIG['user_agent']})
+if not r_csv.ok:
+    print('ERROR: failed to fetch csv, status code: {}'.format(r_csv.status_code))
     sys.exit(1)
 
 if DEBUG:
@@ -179,7 +164,7 @@ else:
     )
     db_client.switch_database(CONFIG['db']['database'])
 
-corona_parser = CoronaParser(db_client, html.fromstring(r.text))
+corona_parser = CoronaParser(db_client, r_web.text, r_csv.content)
 
 try:
     dt = corona_parser.parse()
