@@ -101,7 +101,7 @@ class CoronaParser:
         counties_table = tables[0]
         district_table = tables[1]
 
-        if counties_table.xpath('tr')[0].xpath('th/span/text()')[0] != 'Land-/Stadtkreis':
+        if counties_table.xpath('tr')[0].xpath('th/span/text()')[0] != 'Landkreis/Stadt':
             raise Exception('ERROR: Landkreis table not found')
 
         if district_table.xpath('tr')[0].xpath('th/text()')[0] != 'Regierungsbezirk':
