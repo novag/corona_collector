@@ -97,49 +97,16 @@ class CoronaParser:
                 dt = dt.replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
                 break
 
-        tables = self.tree.xpath('//table')
-        counties_table = tables[0]
-        cities_table = tables[1]
+        rows = self.tree.xpath('//table/tbody/tr')
 
-        if counties_table.xpath('.//tr')[0].xpath('.//td/p/text()')[0] != 'Landkreis':
+        if rows[0].xpath('td/p/text()')[0] != 'Landkreis':
             raise Exception('ERROR: Landkreis table not found')
 
-        if cities_table.xpath('.//tr')[0].xpath('.//td/p/text()')[0] != 'Stadt':
-            raise Exception('ERROR: Stadt table not found')
-
-        # Counties
         data = []
         infected_sum = 0
-        for row in counties_table.xpath('.//tr'):
-            cells = row.xpath('.//td/p/text()')
-
-            if not cells:
-                continue
-
-            county = cells[0].replace('\xa0', '').strip()
-            infected_str = cells[1].replace('\xa0', '').strip()
-
-            if county == 'Landkreis':
-                continue
-
-            infected = int(infected_str)
-            infected_sum += infected
-
-            data.append({
-                'measurement': 'infected_de_state',
-                'tags': {
-                    'state': STATE,
-                    'county': county
-                },
-                'time': dt,
-                'fields': {
-                    'count': infected,
-                    'p10k': self._calculate_p10k(county, infected, False)
-                }
-            })
-
-        for row in cities_table.xpath('.//tr'):
-            cells = row.xpath('.//td/p/text()')
+        city = False
+        for row in rows[1:]:
+            cells = row.xpath('td/p/text()')
 
             if not cells:
                 continue
@@ -148,6 +115,7 @@ class CoronaParser:
             infected_str = cells[1].replace('\xa0', '').strip()
 
             if county == 'Stadt':
+                city = True
                 continue
 
             infected = int(infected_str)
@@ -162,7 +130,7 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected, True)
+                    'p10k': self._calculate_p10k(county, infected, city)
                 }
             })
 
