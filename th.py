@@ -91,7 +91,7 @@ class CoronaParser:
 
         table = self.tree.xpath('//table[@class="table table-striped"]')[0]
 
-        if table.xpath('thead/tr/th[3]/text()')[0] != 'Gesamt-':
+        if table.xpath('thead/tr/th[3]/text()')[0] != 'aktueller':
             raise Exception('ERROR: table not found')
 
         # Counties
@@ -104,7 +104,7 @@ class CoronaParser:
             if not thcell or not cells:
                 continue
 
-            if len(cells) != 6:
+            if len(cells) != 7:
                 raise Exception('ERROR: invalid cell length: {}'.format(len(cells)))
 
             county = thcell[0].strip()
