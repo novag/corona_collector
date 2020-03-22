@@ -93,7 +93,7 @@ class CoronaParser:
     def parse(self):
         dt_text = self.tree.xpath('//table/thead/tr/th/text()')[-1]
         dt_text = dt_text.split(',')[0]
-        dt = datetime.strptime(dt_text, 'Stand %d.%m.').replace(year=2020, hour=12).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(dt_text, 'Stand %d.%m.').replace(year=2020, hour=9).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         table = self.tree.xpath('//table/tbody/tr')
 
