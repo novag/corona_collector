@@ -103,7 +103,7 @@ class CoronaParser:
                 continue
 
             county = cells[0].strip()
-            infected_str = cells[-1].strip()
+            infected_str = cells[1].strip()
 
             if county == 'Brandenburg gesamt':
                 continue
@@ -160,7 +160,7 @@ else:
         title = post.xpath('h2/a/text()')[0]
         href = post.xpath('h2/a/@href')[0]
 
-        if 'Erkrankungen an COVID-19' in title:
+        if 'Erkrankungen an COVID-19' in title or 'COVID-19-Erkrankungen' in title:
             data_url = 'https://msgiv.brandenburg.de{}'.format(href)
             break
 
