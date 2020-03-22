@@ -166,7 +166,7 @@ else:
         title = post.xpath('h2/a/text()')[0]
         href = post.xpath('h2/a/@href')[0]
 
-        if 'Erkrankungen an COVID-19' in title or 'COVID-19-Erkrankungen' in title:
+        if 'Erkrankungen an COVID-19' in title or 'COVID-19-Erkrankungen' in title or 'COVID-19-Fälle' in title:
             data_url = 'https://msgiv.brandenburg.de{}'.format(href)
             break
 
