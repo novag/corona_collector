@@ -111,7 +111,7 @@ class CoronaParser:
         infected_sum = 0
         city = False
         for row in rows[1:]:
-            cells = row.xpath('td/p/text()')
+            cells = row.xpath('td/descendant-or-self::*/text()')
 
             if not cells:
                 continue
