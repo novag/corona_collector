@@ -85,6 +85,11 @@ class CoronaParser:
 
         return None
 
+    def _calculate_p100k(self, infected):
+        population = POPULATION['state'][STATE_SHORT]
+
+        return round(infected * 100000 / population, 2)
+
     def parse(self):
         dt_text = self.tree.xpath('//table/thead/tr/th/text()')[-1]
         dt_text = dt_text.split(',')[0]
@@ -130,7 +135,8 @@ class CoronaParser:
             },
             'time': dt,
             'fields': {
-                'count': infected_sum
+                'count': infected_sum,
+                'p100k': self._calculate_p100k(infected_sum)
             }
         })
 

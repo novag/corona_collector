@@ -93,6 +93,11 @@ class CoronaParser:
 
         return None
 
+    def _calculate_p100k(self, infected):
+        population = POPULATION['state'][STATE_SHORT]
+
+        return round(infected * 100000 / population, 2)
+
     def parse(self):
         dt_text = self.tree.xpath('//p[@class="bildunterschrift"]/strong/text()')[1]
         dt = datetime.strptime(dt_text, '*Stand: %d.%m.%Y %H:%M Uhr.').strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -172,7 +177,8 @@ class CoronaParser:
             },
             'time': dt,
             'fields': {
-                'count': infected_sum
+                'count': infected_sum,
+                'p100k': self._calculate_p100k(infected_sum)
             }
         })
 
