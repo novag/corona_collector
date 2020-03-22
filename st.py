@@ -97,8 +97,10 @@ class CoronaParser:
 
     def parse(self):
         dt_text = self.tree.xpath('//div[@class="ce-bodytext"]/p/text()')[0]
-        dt_text = dt_text.split('(Stand ')[1]
-        dt = datetime.strptime(dt_text, '%d.%m.%Y; %H.%M Uhr).').strftime('%Y-%m-%dT%H:%M:%SZ')
+        result = re.findall(r'(\(Stand.+\))', dt_text)
+        if not result:
+            raise ValueError('ERROR: CoronaParser: dt text not found')
+        dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H.%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//div[@class="ce-bodytext"]/p[@class="MsoNormal"]')[1].xpath('text()[preceding-sibling::br or following-sibling::br]')
 
