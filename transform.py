@@ -19,7 +19,7 @@ POPULATION = {
 with open(STATES_CSV_PATH, encoding='utf-8') as file:
     dict_reader = csv.DictReader(file)
     for row in dict_reader:
-        state = row['state']
+        state = row['short']
         population = int(row['population'])
 
         POPULATION['state'][state] = population
