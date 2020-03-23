@@ -102,6 +102,13 @@ class CoronaParser:
         dt_text = self.tree.xpath('//p[@class="bildunterschrift"]/strong/text()')[1]
         dt = datetime.strptime(dt_text, '*Stand: %d.%m.%Y %H:%M Uhr.').strftime('%Y-%m-%dT%H:%M:%SZ')
 
+        overview_table = self.tree.xpath('//table')[0]
+        thdeath = self.tree.xpath('//table')[0].xpath('thead/tr/th/text()')[2]
+        if thdeath != 'Todesfälle':
+            raise ValueError('ERROR: CoronaParser: death count not found')
+        death_str = self.tree.xpath('//table')[0].xpath('tbody/tr')[-1].xpath('td/text()')[2]
+        death_sum = int(death_str)
+
         tables = self.tree.xpath('//div[@class="row abstand_unten"]//table')
         counties_table = tables[0]
         district_table = tables[1]
@@ -178,7 +185,8 @@ class CoronaParser:
             'time': dt,
             'fields': {
                 'count': infected_sum,
-                'p100k': self._calculate_p100k(infected_sum)
+                'p100k': self._calculate_p100k(infected_sum),
+                'death': death_sum
             }
         })
 

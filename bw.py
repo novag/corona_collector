@@ -6,6 +6,7 @@ import json
 import locale
 import os
 import openpyxl
+import re
 import requests
 import sys
 import traceback
@@ -122,6 +123,13 @@ class CoronaParser:
         if excel_dt.date() != web_dt.date():
             raise Exception('WARN: Date mismatch: No datetime available yet. Skipping run...')
 
+        death_str = ' '.join(self.tree.xpath('//div[@class="article__section article__section--no-2 article__section--bw_quote_teaser_pi1"]/div[@class="text"]/p[@class="bodytext"]/descendant-or-self::*/text()'))
+        result = re.findall(r'(\d+) Todesfälle', death_str)
+        if not result:
+            raise ValueError('ERROR: CoronaParser: death count not found')
+
+        death_sum = int(result[0])
+
         data = []
         infected_sum = 0
         for row in self.ws.iter_rows(min_col=self.ws.min_column, min_row=county_row, max_row=self.ws.max_row, max_col=self.ws.min_column + 1):
@@ -157,7 +165,8 @@ class CoronaParser:
             'time': self.dt,
             'fields': {
                 'count': infected_sum,
-                'p100k': self._calculate_p100k(infected_sum)
+                'p100k': self._calculate_p100k(infected_sum),
+                'death': death_sum
             }
         })
 

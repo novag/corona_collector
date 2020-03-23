@@ -101,6 +101,10 @@ class CoronaParser:
         if table.xpath('thead/tr/th/text()')[0] != 'Kreisfreie Stadt / Landkreis':
             raise Exception('ERROR: table not found')
 
+        death_str = table.xpath('parent::div/p/text()[following-sibling::br]')[0].strip()
+        death_str = death_str.split(': ')[1]
+        death_sum = int(death_str)
+
         # Counties
         data = []
         infected_sum = 0
@@ -144,7 +148,8 @@ class CoronaParser:
             'time': dt,
             'fields': {
                 'count': infected_sum,
-                'p100k': self._calculate_p100k(infected_sum)
+                'p100k': self._calculate_p100k(infected_sum),
+                'death': death_sum
             }
         })
 

@@ -5,6 +5,7 @@ import io
 import json
 import os
 import locale
+import re
 import requests
 import sys
 import traceback
@@ -105,6 +106,13 @@ class CoronaParser:
         if counties_table.xpath('thead/tr/th/text()')[0] != 'Landkreis/ kreisfreie Stadt':
             raise Exception('ERROR: Landkreis table not found')
 
+        death_str = counties_table.xpath('parent::div/p/text()')[0].strip()
+        result = re.findall(r'(\d+) Todesfälle', death_str)
+        if not result:
+            raise ValueError('ERROR: CoronaParser: death count not found')
+
+        death_sum = int(result[0])
+
         # Counties
         data = []
         infected_sum = 0
@@ -144,7 +152,8 @@ class CoronaParser:
             'time': dt,
             'fields': {
                 'count': infected_sum,
-                'p100k': self._calculate_p100k(infected_sum)
+                'p100k': self._calculate_p100k(infected_sum),
+                'death': death_sum
             }
         })
 

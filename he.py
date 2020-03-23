@@ -105,7 +105,8 @@ class CoronaParser:
         # Counties
         data = []
         infected_sum = 0
-        for i, row in enumerate(table.xpath('tr')):
+        death_sum = 0
+        for row in table.xpath('tr'):
             cells = row.xpath('td/p/text()')
 
             if not cells:
@@ -116,12 +117,16 @@ class CoronaParser:
 
             county = cells[0].strip()
             infected_str = cells[1].strip()
+            death_str = cells[3].strip()
 
-            try:
-                infected = int(infected_str)
-            except ValueError:
-                infected = 0
+            infected = int(infected_str)
             infected_sum += infected
+
+            if death_str:
+                death = int(death_str)
+                death_sum += death
+            else:
+                death = 0
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -132,7 +137,8 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
@@ -144,7 +150,8 @@ class CoronaParser:
             'time': dt,
             'fields': {
                 'count': infected_sum,
-                'p100k': self._calculate_p100k(infected_sum)
+                'p100k': self._calculate_p100k(infected_sum),
+                'death': death_sum
             }
         })
 
