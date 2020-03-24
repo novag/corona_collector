@@ -89,7 +89,7 @@ class CoronaParser:
 
     def parse(self):
         dt_text = self.tree.xpath('//span[@class="article_time"]/text()')[0]
-        dt = datetime.strptime(dt_text, '%d.%m.%Y').replace(hour=12).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(dt_text, '%d.%m.%Y').replace(hour=10).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tr')
 
@@ -163,7 +163,7 @@ else:
         title = post.xpath('a/text()')[0].strip()
         href = post.xpath('a/@href')[0]
 
-        if title.startswith('Aktueller Stand Corona in Bremen'):
+        if title.startswith('Aktueller Stand Corona in Bremen') or title.startswith('Update Fallzahlen Corona'):
             data_url = 'https://www.senatspressestelle.bremen.de/{}'.format(href)
             break
 
