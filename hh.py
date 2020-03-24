@@ -82,11 +82,12 @@ class CoronaParser:
 
         paragraph = self.tree.xpath('//div[@class="richtext"]/p/text()')[0]
 
-        matches = re.findall(r'insgesamt (\d+) angestiegen', paragraph)
+        matches = re.findall(r'insgesamt ([\d\.]+) angestiegen', paragraph)
         if not matches:
             raise ValueError('ERROR: CoronaParser: infected number not found')
 
-        infected_sum = int(matches[0])
+        infected_str = matches[0].replace('.', '')
+        infected_sum = int(infected_str)
 
         data = [{
             'measurement': 'infected_de',
