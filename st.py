@@ -113,7 +113,7 @@ class CoronaParser:
             except ValueError:
                 dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H. Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        rows = self.tree.xpath('//div[@class="ce-bodytext"]/p[@class="MsoNormal"]')[1].xpath('text()[preceding-sibling::br or following-sibling::br]')
+        rows = self.tree.xpath('//div[@class="ce-textpic ce-left ce-intext"]/div[@class="ce-bodytext"]')[0].xpath('p')[3].xpath('text()[preceding-sibling::br or following-sibling::br]')
 
         data = []
         infected_sum = 0
