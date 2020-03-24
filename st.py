@@ -108,7 +108,10 @@ class CoronaParser:
         try:
             dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H.%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
-            dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H. Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+            try:
+                dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+            except ValueError:
+                dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H. Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//div[@class="ce-bodytext"]/p[@class="MsoNormal"]')[1].xpath('text()[preceding-sibling::br or following-sibling::br]')
 
