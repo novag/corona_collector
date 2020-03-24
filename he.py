@@ -3,8 +3,8 @@
 import influxdb
 import io
 import json
-import os
 import locale
+import os
 import requests
 import sys
 import traceback
@@ -65,28 +65,27 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
-        county = county.replace('SK Offenbach', 'Offenbach am Main')
-
+    def _normalize_county(self, county):
         county = county.replace('LK ', '')
-        county = county.replace('SK ', '')
+
+        county = county.replace('SK Offenbach', 'Offenbach am Main (Stadt)')
+        if county.startswith('SK '):
+            county = county.replace('SK ', '')
+            county = '{} (Stadt)'.format(county)
 
         return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
-            if county.startswith('LK '):
-                population = POPULATION['county'][STATE_SHORT][county_raw]
-            elif county.startswith('SK '):
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+            if county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                raise ValueError('ERROR: CoronaParser: _calculate_p10k: unknown county format')
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -115,7 +114,7 @@ class CoronaParser:
             if cells[0] == 'Kreis/Stadt' or cells[0] == 'Gesamt':
                 continue
 
-            county = cells[0].strip()
+            county = self._normalize_county(cells[0].strip())
             infected_str = cells[1].strip()
             death_str = cells[3].strip()
 

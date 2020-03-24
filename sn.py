@@ -65,25 +65,27 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
-        county = county.replace('Landeshauptstadt ', '')
-        county = county.replace('Stadt ', '')
+    def _normalize_county(self, county):
         county = county.replace('Landkreis ', '')
+
+        if county.startswith('Landeshauptstadt ') or county.startswith('Stadt '):
+            county = county.replace('Landeshauptstadt ', '')
+            county = county.replace('Stadt ', '')
+            county = '{} (Stadt)'.format(county)
 
         return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
-            if 'kreis' in county:
-                population = POPULATION['county'][STATE_SHORT][county_raw]
+            if county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -116,13 +118,13 @@ class CoronaParser:
 
             if len(cells) != 2 and len(cells) != 4:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
+
+            if cells[0].strip() == 'Gesamtzahl der Infektionen':
+                continue
  
-            county = cells[0].strip()
+            county = self._normalize_county(cells[0].strip())
             infected_str = cells[1].strip() if len(cells) == 2 else cells[2].strip()
             infected_str = infected_str.split('(+')[0].strip()
-
-            if county == 'Gesamtzahl der Infektionen':
-                continue
 
             infected = int(infected_str)
             infected_sum += infected

@@ -63,21 +63,6 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
-        return county
-
-    def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
-        try:
-            population = POPULATION['city'][STATE_SHORT][county_raw]
-
-            return round(infected * 10000 / population, 2)
-        except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
-
-        return None
-
     def _calculate_p100k(self, infected):
         population = POPULATION['state'][STATE_SHORT]
 

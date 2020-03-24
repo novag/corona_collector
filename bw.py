@@ -76,24 +76,23 @@ class CoronaParser:
 
         return date
 
-    def _raw_county(self, county):
-        return county.replace(' (Stadtkreis)', '')
+    def _normalize_county(self, county):
+        county = county.replace('Stuttgart', 'Stuttgart (Stadt)')
+        county = county.replace(' (Stadtkreis)', ' (Stadt)')
 
-    def _city_fix(self, county):
-        return county == 'Stuttgart'
+        return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
-            if county.endswith('(Stadtkreis)') or self._city_fix(county):
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+            if county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                population = POPULATION['county'][STATE_SHORT][county_raw]
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -133,7 +132,7 @@ class CoronaParser:
         data = []
         infected_sum = 0
         for row in self.ws.iter_rows(min_col=self.ws.min_column, min_row=county_row, max_row=self.ws.max_row, max_col=self.ws.min_column + 1):
-            county = row[0].value.strip()
+            county = self._normalize_county(row[0].value.strip())
 
             if not county:
                 continue

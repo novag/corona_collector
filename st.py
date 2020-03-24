@@ -63,30 +63,29 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
-        county = county.replace('LK ', '')
-        county = county.replace('SK ', '')
-
+    def _normalize_county(self, county):
         county = county.replace('Anhalt Bitterfeld', 'Anhalt-Bitterfeld')
-        county = county.replace('Halle', 'Halle (Saale)')
-        county = county.replace('Dessau', 'Dessau-Roßlau')
+        county = county.replace('LK ', '')
+
+        if county.startswith('SK '):
+            county = county.replace('Dessau', 'Dessau-Roßlau')
+            county = county.replace('Halle', 'Halle (Saale)')
+            county = county.replace('SK ', '')
+            county = '{} (Stadt)'.format(county)
 
         return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
-            if county.startswith('LK '):
-                population = POPULATION['county'][STATE_SHORT][county_raw]
-            elif county.startswith('SK '):
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+            if county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                raise ValueError('ERROR: CoronaParser: _calculate_p10k: unknown county format')
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -100,7 +99,11 @@ class CoronaParser:
         result = re.findall(r'(\(Stand.+\))', dt_text)
         if not result:
             raise ValueError('ERROR: CoronaParser: dt text not found')
-        dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H.%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        try:
+            dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H.%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+        except ValueError:
+            dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H. Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//div[@class="ce-bodytext"]/p[@class="MsoNormal"]')[1].xpath('text()[preceding-sibling::br or following-sibling::br]')
 
@@ -112,7 +115,7 @@ class CoronaParser:
             if not result:
                 raise ValueError('ERROR: CoronaParser: invalid row format')
 
-            county = result.group(1).strip()
+            county = self._normalize_county(result.group(1).strip())
             infected = int(result.group(2))
             infected_sum += infected
 

@@ -62,30 +62,32 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
+    def _normalize_county(self, county, is_city):
         county = county.replace('Altenkirchen', 'Altenkirchen (Westerwald)')
         county = county.replace('Bitburg-Prüm', 'Eifelkreis Bitburg-Prüm')
         county = county.replace('Rhein-Hunsrück', 'Rhein-Hunsrück-Kreis')
         county = county.replace('Südliche Weinstr.', 'Südliche Weinstraße')
-        county = county.replace('Frankenthal', 'Frankenthal (Pfalz)')
-        county = county.replace('Landau i.d.Pfalz', 'Landau in der Pfalz')
-        county = county.replace('Ludwigshafen', 'Ludwigshafen am Rhein')
-        county = county.replace('Neustadt Weinst.', 'Neustadt an der Weinstraße')
+
+        if is_city:
+            county = county.replace('Frankenthal', 'Frankenthal (Pfalz)')
+            county = county.replace('Landau i.d.Pfalz', 'Landau in der Pfalz')
+            county = county.replace('Ludwigshafen', 'Ludwigshafen am Rhein')
+            county = county.replace('Neustadt Weinst.', 'Neustadt an der Weinstraße')
+            county = '{} (Stadt)'.format(county)
 
         return county
 
-    def _calculate_p10k(self, county, infected, is_city):
-        county_raw = self._raw_county(county)
-
+    def _calculate_p10k(self, county, infected):
         try:
-            if is_city:
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+            if county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                population = POPULATION['county'][STATE_SHORT][county_raw]
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -110,20 +112,20 @@ class CoronaParser:
         data = []
         infected_sum = 0
         death_sum = 0
-        city = False
+        is_city = False
         for row in rows[1:]:
             cells = row.xpath('td/descendant-or-self::*/text()')
 
             if not cells:
                 continue
 
-            county = cells[0].replace('\xa0', '').strip()
+            if cells[0].strip() == 'Stadt':
+                is_city = True
+                continue
+
+            county = self._normalize_county(cells[0].replace('\xa0', '').strip(), is_city)
             infected_str = cells[1].replace('\xa0', '').strip()
             death_str = cells[2].strip()
-
-            if county == 'Stadt':
-                city = True
-                continue
 
             infected = int(infected_str)
             infected_sum += infected
@@ -140,7 +142,7 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected, city),
+                    'p10k': self._calculate_p10k(county, infected),
                     'death': death
                 }
             })

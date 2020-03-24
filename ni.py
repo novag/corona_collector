@@ -64,31 +64,30 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
-        county = county.replace('LK ', '')
-        county = county.replace('SK ', '')
-
+    def _normalize_county(self, county):
         county = county.replace('Nienburg (Weser)', 'Nienburg/Weser')
+        county = county.replace('LK ', '')
+
+        if county.startswith('SK '):
+            county = county.replace('SK ', '')
+            county = '{} (Stadt)'.format(county)
 
         return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
             if county == 'Region Hannover':
                 population = POPULATION['city'][STATE_SHORT]['Hannover']
                 population += POPULATION['county'][STATE_SHORT]['Hannover']
-            elif county.startswith('LK '):
-                population = POPULATION['county'][STATE_SHORT][county_raw]
-            elif county.startswith('SK '):
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+            elif county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                raise ValueError('ERROR: CoronaParser: _calculate_p10k: unknown county format')
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            raise Exception('{}/{} not found in population database.'.format(county, county_raw))
+            raise Exception('{} not found in population database.'.format(county))
 
         return None
 
@@ -105,7 +104,7 @@ class CoronaParser:
         data = []
         infected_sum = 0
         for row in self.data:
-            county = row['Landkreis'].strip()
+            county = self._normalize_county(row['Landkreis'].strip())
             infected_str = row['bestätigte Fälle'].strip()
 
             infected = int(infected_str)

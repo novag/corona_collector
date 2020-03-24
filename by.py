@@ -62,9 +62,7 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
-        county = county.replace('Weiden Stadt', 'Weiden in der Oberpfalz')
-
+    def _normalize_county(self, county):
         county = county.replace('Bad Tölz', 'Bad Tölz-Wolfratshausen')
         county = county.replace('Dillingen a.d. Donau', 'Dillingen an der Donau')
         county = county.replace('Mühldorf a.Inn', 'Mühldorf am Inn')
@@ -74,22 +72,22 @@ class CoronaParser:
         county = county.replace('Pfaffenhofen a.d.Ilm', 'Pfaffenhofen an der Ilm')
         county = county.replace('Wunsiedel i.Fichtelgebirge', 'Wunsiedel im Fichtelgebirge')
 
-        county = county.replace(' Stadt', '')
+        county = county.replace(' Stadt', ' (Stadt)')
+        county = county.replace('Weiden (Stadt)', 'Weiden in der Oberpfalz (Stadt)')
 
         return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
-            if county.endswith(' Stadt'):
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+            if county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                population = POPULATION['county'][STATE_SHORT][county_raw]
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -130,7 +128,7 @@ class CoronaParser:
             if cells[0] == 'Gesamtergebnis':
                 break
 
-            county = cells[0].strip()
+            county = self._normalize_county(cells[0].strip())
             infected_str = cells[1].strip()
 
             infected = int(infected_str)

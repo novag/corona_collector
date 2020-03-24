@@ -3,8 +3,8 @@
 import influxdb
 import io
 import json
-import os
 import locale
+import os
 import requests
 import sys
 import traceback
@@ -65,23 +65,19 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
+    def _normalize_county(self, county):
         return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
-            if county_raw in POPULATION['county'][STATE_SHORT]:
-                population = POPULATION['county'][STATE_SHORT][county_raw]
-            elif county_raw in POPULATION['city'][STATE_SHORT]:
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+            if county in POPULATION['county'][STATE_SHORT]:
+                population = POPULATION['county'][STATE_SHORT][county]
             else:
-                raise ValueError('ERROR: CoronaParser: _calculate_p10k: unknown county')
+                population = POPULATION['city'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -106,11 +102,11 @@ class CoronaParser:
             if not cells:
                 continue
 
-            county = cells[0].strip()
-            infected_str = cells[-1].strip()
-
-            if county == 'SUMME':
+            if cells[0].strip() == 'SUMME':
                 continue
+
+            county = self._normalize_county(cells[0].strip())
+            infected_str = cells[-1].strip()
 
             infected = int(infected_str)
             infected_sum += infected

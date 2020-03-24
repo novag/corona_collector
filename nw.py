@@ -3,8 +3,8 @@
 import influxdb
 import io
 import json
-import os
 import locale
+import os
 import re
 import requests
 import sys
@@ -66,28 +66,29 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
-        county = county.replace(' (Kreis)', '')
-
-        county = county.replace('Mülheim / Ruhr', 'Mülheim an der Ruhr')
+    def _normalize_county(self, county):
+        if 'Kreis' in county:
+            county = county.replace(' (Kreis)', '')
+        elif county != 'Aachen & Städteregion Aachen':
+            county = county.replace('Mülheim / Ruhr', 'Mülheim an der Ruhr')
+            county = '{} (Stadt)'.format(county)
 
         return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
             if county == 'Aachen & Städteregion Aachen':
                 population = POPULATION['city'][STATE_SHORT]['Aachen']
                 population += POPULATION['county'][STATE_SHORT]['Aachen']
-            elif 'Kreis' in county or county == 'Höxter':
-                population = POPULATION['county'][STATE_SHORT][county_raw]
+            elif county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -122,7 +123,7 @@ class CoronaParser:
             if not cells:
                 continue
 
-            county = cells[0].strip()
+            county = self._normalize_county(cells[0].strip())
             infected_str = cells[1].strip()
 
             try:

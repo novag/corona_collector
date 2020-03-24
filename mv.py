@@ -4,7 +4,6 @@ import influxdb
 import io
 import json
 import os
-import locale
 import requests
 import sys
 import traceback
@@ -50,8 +49,6 @@ class CoronaParser:
         self.db = db
         self.tree = html.fromstring(html_text)
 
-        locale.setlocale(locale.LC_TIME, "de_DE.utf8")
-
     def _store(self, data):
         if DEBUG:
             print(data)
@@ -65,24 +62,24 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _raw_county(self, county):
-        county = county.replace('Hansestadt Rostock', 'Rostock')
+    def _normalize_county(self, county):
+        county = county.replace('Schwerin', 'Schwerin (Stadt)')
+        county = county.replace('Hansestadt Rostock', 'Rostock (Stadt)')
         county = county.replace('Landkreis Rostock', 'Rostock')
 
         return county
 
     def _calculate_p10k(self, county, infected):
-        county_raw = self._raw_county(county)
-
         try:
-            if county == 'Hansestadt Rostock' or county == 'Schwerin':
-                population = POPULATION['city'][STATE_SHORT][county_raw]
+            if county.endswith('(Stadt)'):
+                raw_county = county.replace(' (Stadt)', '')
+                population = POPULATION['city'][STATE_SHORT][raw_county]
             else:
-                population = POPULATION['county'][STATE_SHORT][county_raw]
+                population = POPULATION['county'][STATE_SHORT][county]
 
             return round(infected * 10000 / population, 2)
         except:
-            notify('{}/{} not found in population database.'.format(county, county_raw))
+            notify('{} not found in population database.'.format(county))
 
         return None
 
@@ -109,7 +106,7 @@ class CoronaParser:
             if not cells:
                 continue
 
-            county = cells[0].strip()
+            county = self._normalize_county(cells[0].strip())
             infected_str = cells[-1].strip()
 
             if county == 'SUMME':
