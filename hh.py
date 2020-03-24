@@ -66,7 +66,12 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _calculate_p100k(self, infected):
+    def _calculate_state_p10k(self, infected):
+        population = POPULATION['state'][STATE_SHORT]
+
+        return round(infected * 10000 / population, 2)
+
+    def _calculate_state_p100k(self, infected):
         population = POPULATION['state'][STATE_SHORT]
 
         return round(infected * 100000 / population, 2)
@@ -81,7 +86,7 @@ class CoronaParser:
         if not matches:
             raise ValueError('ERROR: CoronaParser: infected number not found')
 
-        infected = int(matches[0])
+        infected_sum = int(matches[0])
 
         data = [{
             'measurement': 'infected_de',
@@ -90,8 +95,9 @@ class CoronaParser:
             },
             'time': dt,
             'fields': {
-                'count': infected,
-                'p100k': self._calculate_p100k(infected)
+                'count': infected_sum,
+                'p10k': self._calculate_state_p10k(infected_sum),
+                'p100k': self._calculate_state_p100k(infected_sum)
             }
         }]
 

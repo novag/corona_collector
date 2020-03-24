@@ -89,7 +89,12 @@ class CoronaParser:
 
         return None
 
-    def _calculate_p100k(self, infected):
+    def _calculate_state_p10k(self, infected):
+        population = POPULATION['state'][STATE_SHORT]
+
+        return round(infected * 10000 / population, 2)
+
+    def _calculate_state_p100k(self, infected):
         population = POPULATION['state'][STATE_SHORT]
 
         return round(infected * 100000 / population, 2)
@@ -150,7 +155,8 @@ class CoronaParser:
             'time': dt,
             'fields': {
                 'count': infected_sum,
-                'p100k': self._calculate_p100k(infected_sum),
+                'p10k': self._calculate_state_p10k(infected_sum),
+                'p100k': self._calculate_state_p100k(infected_sum),
                 'death': death_sum
             }
         })

@@ -63,14 +63,19 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _calculate_p100k(self, infected):
+    def _calculate_state_p10k(self, infected):
+        population = POPULATION['state'][STATE_SHORT]
+
+        return round(infected * 10000 / population, 2)
+
+    def _calculate_state_p100k(self, infected):
         population = POPULATION['state'][STATE_SHORT]
 
         return round(infected * 100000 / population, 2)
 
     def parse(self):
         dt = None
-        infected = None
+        infected_sum = None
 
         posts = self.tree.xpath('//ul[@class="list-autoteaser"]/li')
         for post in posts:
@@ -79,11 +84,11 @@ class CoronaParser:
             if results:
                 dt_text = post.xpath('div[@class="span2 cell date"]/text()')[0]
                 dt = datetime.strptime(dt_text, '%d.%m.%Y %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
-                infected = int(results[0])
+                infected_sum = int(results[0])
 
                 break
 
-        if not dt or not infected:
+        if not dt or not infected_sum:
             raise Exception('ERROR: CoronaParser: No data found')
 
         self._store([{
@@ -93,8 +98,9 @@ class CoronaParser:
             },
             'time': dt,
             'fields': {
-                'count': infected,
-                'p100k': self._calculate_p100k(infected)
+                'count': infected_sum,
+                'p10k': self._calculate_state_p10k(infected_sum),
+                'p100k': self._calculate_state_p100k(infected_sum)
             }
         }])
 
