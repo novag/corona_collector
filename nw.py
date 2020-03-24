@@ -112,16 +112,10 @@ class CoronaParser:
         if counties_table.xpath('thead/tr/th/text()')[0] != 'Landkreis/ kreisfreie Stadt':
             raise Exception('ERROR: Landkreis table not found')
 
-        death_str = counties_table.xpath('parent::div/p/text()')[0].strip()
-        result = re.findall(r'(\d+) Todesfälle', death_str)
-        if not result:
-            raise ValueError('ERROR: CoronaParser: death count not found')
-
-        death_sum = int(result[0])
-
         # Counties
         data = []
         infected_sum = 0
+        death_sum = 0
         for row in counties_table.xpath('tbody/tr'):
             cells = row.xpath('td/text()')
 
@@ -129,13 +123,17 @@ class CoronaParser:
                 continue
 
             county = self._normalize_county(cells[0].strip())
-            infected_str = cells[1].strip()
+            infected_str = cells[1].replace('.', '').strip()
+            death_str = cells[2].replace('.', '').strip()
 
-            try:
-                infected = int(infected_str)
-            except ValueError:
-                infected = 0
+            infected = int(infected_str)
             infected_sum += infected
+
+            if death_str:
+                death = int(death_str)
+                death_sum += death
+            else:
+                death = 0
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -146,7 +144,8 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
