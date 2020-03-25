@@ -64,11 +64,9 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _normalize_county(self, county):
-        county = county.replace('Anhalt Bitterfeld', 'Anhalt-Bitterfeld')
         county = county.replace('LK ', '')
 
         if county.startswith('SK '):
-            county = county.replace('Dessau', 'Dessau-Roßlau')
             county = county.replace('Halle', 'Halle (Saale)')
             county = county.replace('SK ', '')
             county = '{} (Stadt)'.format(county)
@@ -113,19 +111,27 @@ class CoronaParser:
             except ValueError:
                 dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H. Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        rows = self.tree.xpath('//div[@class="ce-textpic ce-left ce-intext"]/div[@class="ce-bodytext"]')[0].xpath('p')[3].xpath('text()[preceding-sibling::br or following-sibling::br]')
+        rows = self.tree.xpath('//table/tbody/tr')
 
         data = []
         infected_sum = 0
+        death_sum = 0
         for row in rows:
-            row = row.replace('\xa0', '').strip()
-            result = re.search(r'(\D+)\s(\d+)', row)
-            if not result:
-                raise ValueError('ERROR: CoronaParser: invalid row format')
+            cells = row.xpath('td')
 
-            county = self._normalize_county(result.group(1).strip())
-            infected = int(result.group(2))
+            if len(cells) != 4:
+                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
+
+            if cells[0].xpath('descendant-or-self::*/text()')[0] == 'Sachsen-Anhalt':
+                continue
+
+            county = self._normalize_county(cells[0].text.strip())
+
+            infected = int(cells[1].text.strip())
             infected_sum += infected
+
+            death = int(cells[3].text.strip())
+            death_sum += death
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -136,7 +142,8 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
@@ -149,7 +156,8 @@ class CoronaParser:
             'fields': {
                 'count': infected_sum,
                 'p10k': self._calculate_state_p10k(infected_sum),
-                'p100k': self._calculate_state_p100k(infected_sum)
+                'p100k': self._calculate_state_p100k(infected_sum),
+                'death': death_sum
             }
         })
 
