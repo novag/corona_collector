@@ -106,7 +106,7 @@ class CoronaParser:
             raise ValueError('ERROR: CoronaParser: dt text not found')
 
         try:
-            dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H.%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+            dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H:%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
             try:
                 dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
