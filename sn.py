@@ -115,24 +115,27 @@ class CoronaParser:
         # Counties
         data = []
         infected_sum = 0
+        death_stum = 0
         for row in table.xpath('tbody/tr'):
-            cells = row.xpath('td/descendant-or-self::*/text()')
+            cells = row.xpath('td')
 
-            if not cells:
-                continue
-
-            if len(cells) != 2 and len(cells) != 4:
-                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
-
-            if cells[0].strip() == 'Gesamtzahl der Infektionen':
+            if cells[0].xpath('descendant-or-self::*/text()')[0].strip() == 'Gesamtzahl der Infektionen':
                 continue
  
-            county = self._normalize_county(cells[0].strip())
-            infected_str = cells[1].strip() if len(cells) == 2 else cells[2].strip()
-            infected_str = infected_str.split('(+')[0].strip()
+            county = self._normalize_county(cells[0].xpath('descendant-or-self::*/text()')[0].strip())
+            infected_str = cells[1].xpath('descendant-or-self::*/text()')[0].strip()
+            if not infected_str:
+                infected_str = cells[1].xpath('descendant-or-self::*/text()')[1].strip()
+            death_str = cells[3].xpath('descendant-or-self::*/text()')[0].strip()
 
             infected = int(infected_str)
             infected_sum += infected
+
+            if death_str:
+                death = int(death_str)
+                death_sum += death
+            else:
+                death = 0
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -143,7 +146,8 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
