@@ -70,7 +70,7 @@ class CoronaParser:
 
         if is_city:
             county = county.replace('Frankenthal', 'Frankenthal (Pfalz)')
-            county = county.replace('Landau i.d.Pfalz', 'Landau in der Pfalz')
+            county = county.replace('Landau i.d. Pfalz', 'Landau in der Pfalz')
             county = county.replace('Ludwigshafen', 'Ludwigshafen am Rhein')
             county = county.replace('Neustadt Weinst.', 'Neustadt an der Weinstraße')
             county = '{} (Stadt)'.format(county)
@@ -102,16 +102,13 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_array = self.tree.xpath('//div[@class="small-12 columns clearfix"]/p/text()')
-        for string in dt_array:
-            if string.endswith(' Uhr'):
-                dt = datetime.strptime(string, '%d.%m. %H.%M Uhr')
-                dt = dt.replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
-                break
+        dt_str = self.tree.xpath('//table/tbody/tr/td[@colspan="3"]/text()')[0]
+        dt = datetime.strptime(dt_str, '%d.%m. %H.%M Uhr')
+        dt = dt.replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
-        if rows[0].xpath('td/p/text()')[0] != 'Landkreis':
+        if rows[0].xpath('td/strong/text()')[0] != 'Landkreis':
             raise Exception('ERROR: Landkreis table not found')
 
         data = []
@@ -126,6 +123,9 @@ class CoronaParser:
 
             if cells[0].strip() == 'Stadt':
                 is_city = True
+                continue
+
+            if cells[0].strip() == 'Stand:':
                 continue
 
             county = self._normalize_county(cells[0].replace('\xa0', '').strip(), is_city)
