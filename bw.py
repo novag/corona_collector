@@ -127,8 +127,8 @@ class CoronaParser:
         if excel_dt.date() != web_dt.date():
             raise Exception('WARN: Date mismatch: No datetime available yet. Skipping run...')
 
-        death_str = ' '.join(self.tree.xpath('//div[@class="article__section article__section--no-2 article__section--bw_quote_teaser_pi1"]/div[@class="text"]/p[@class="bodytext"]/descendant-or-self::*/text()'))
-        result = re.findall(r'(\d+) Todesfälle', death_str)
+        death_str = ' '.join(self.tree.xpath('//aside/parent::div/div[@class="text" and @data-rtr-content="#read"]/p/text()'))
+        result = re.findall(r'(\d+)(?:\xa0|\s)Todesfälle', death_str)
         if not result:
             raise ValueError('ERROR: CoronaParser: death count not found')
 
