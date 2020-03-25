@@ -99,6 +99,7 @@ class CoronaParser:
         # Counties
         data = []
         infected_sum = 0
+        death_sum = 0
         for row in rows[1:]:
             thcell = row.xpath('th/text()')
             cells = row.xpath('td/text()')
@@ -109,11 +110,18 @@ class CoronaParser:
             if thcell[0].strip() == 'Land Bremen':
                 continue
 
+            if len(cells) != 4:
+                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
+
             county = self._normalize_county(thcell[0].strip())
             infected_str = cells[0].strip()
+            death_str = cells[3]
 
             infected = int(infected_str)
             infected_sum += infected
+
+            death = int(death_str)
+            death_sum += death
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -124,7 +132,8 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
@@ -137,7 +146,8 @@ class CoronaParser:
             'fields': {
                 'count': infected_sum,
                 'p10k': self._calculate_state_p10k(infected_sum),
-                'p100k': self._calculate_state_p100k(infected_sum)
+                'p100k': self._calculate_state_p100k(infected_sum),
+                'death': death_sum
             }
         })
 
