@@ -135,8 +135,11 @@ class CoronaParser:
             infected = int(infected_str)
             infected_sum += infected
 
-            death = int(death_str)
-            death_sum += death
+            if death_str:
+                death = int(death_str)
+                death_sum += death
+            else:
+                death = 0
 
             data.append({
                 'measurement': 'infected_de_state',
