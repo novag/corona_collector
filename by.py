@@ -11,7 +11,7 @@ from datetime import datetime
 from lxml import html
 
 
-DEBUG = False
+DEBUG = false
 
 STATE = 'Bayern'
 STATE_SHORT = 'BY'
@@ -73,7 +73,8 @@ class CoronaParser:
         county = county.replace('Wunsiedel i.Fichtelgebirge', 'Wunsiedel im Fichtelgebirge')
 
         county = county.replace(' Stadt', ' (Stadt)')
-        county = county.replace('Weiden (Stadt)', 'Weiden in der Oberpfalz (Stadt)')
+        county = county.replace('Kempten', 'Kempten (Allgäu)')
+        county = county.replace('Weiden', 'Weiden in der Oberpfalz')
 
         return county
 
