@@ -126,8 +126,11 @@ class CoronaParser:
             infected_str = cells[1].replace('.', '').strip()
             death_str = cells[2].replace('.', '').strip()
 
-            infected = int(infected_str)
-            infected_sum += infected
+            if infected_str:
+                infected = int(infected_str)
+                infected_sum += infected
+            else:
+                infected = 0
 
             if death_str:
                 death = int(death_str)
