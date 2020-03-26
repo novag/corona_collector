@@ -114,7 +114,7 @@ class CoronaParser:
             if not thcell or not cells:
                 continue
 
-            if len(cells) != 7:
+            if len(cells) != 6:
                 raise Exception('ERROR: invalid cell length: {}'.format(len(cells)))
 
             if thcell[0].strip() == 'Summe':
