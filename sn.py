@@ -100,33 +100,32 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_text = self.tree.xpath('//div[@class="text-col"]')[1].xpath('p/text()')[-1]
-        dt = datetime.strptime(dt_text, 'Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_array = self.tree.xpath('//div[@class="text-col"]')[1].xpath('p/text()')
+        for dt_text in dt_array:
+            if dt_text.startswith('Stand:'):
+                dt = datetime.strptime(dt_text, 'Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+                break
 
         table = self.tree.xpath('//table')[0]
 
         if table.xpath('thead/tr/th/text()')[0] != 'Kreisfreie Stadt / Landkreis':
             raise Exception('ERROR: table not found')
 
-        death_str = table.xpath('parent::div/p/text()[following-sibling::br]')[0].strip()
-        death_str = death_str.split(': ')[1]
-        death_sum = int(death_str)
-
         # Counties
         data = []
         infected_sum = 0
-        death_stum = 0
+        death_sum = 0
         for row in table.xpath('tbody/tr'):
             cells = row.xpath('td')
 
-            if cells[0].xpath('descendant-or-self::*/text()')[0].strip() == 'Gesamtzahl der Infektionen':
+            if cells[0].xpath('descendant-or-self::*/text()')[0].strip().startswith('Gesamtzahl'):
                 continue
  
             county = self._normalize_county(cells[0].xpath('descendant-or-self::*/text()')[0].strip())
-            infected_str = cells[1].xpath('descendant-or-self::*/text()')[0].strip()
+            infected_str = cells[1].xpath('descendant-or-self::*/text()')[0].strip().replace('.', '')
             if not infected_str:
-                infected_str = cells[1].xpath('descendant-or-self::*/text()')[1].strip()
-            death_str = cells[3].xpath('descendant-or-self::*/text()')[0].strip()
+                infected_str = cells[1].xpath('descendant-or-self::*/text()')[1].strip().replace('.', '')
+            death_str = cells[3].xpath('descendant-or-self::*/text()')[0].strip().replace('.', '')
 
             infected = int(infected_str)
             infected_sum += infected
