@@ -115,6 +115,7 @@ class CoronaParser:
         tables = self.tree.xpath('//div[@class="row abstand_unten"]//table')
         counties_table = tables[0]
         district_table = tables[1]
+        death_table = tables[2]
 
         if counties_table.xpath('tr')[0].xpath('th/span/text()')[0] != 'Landkreis/Stadt':
             raise Exception('ERROR: Landkreis table not found')
@@ -122,8 +123,30 @@ class CoronaParser:
         if district_table.xpath('tr')[0].xpath('th/text()')[0] != 'Regierungsbezirk':
             raise Exception('ERROR: Regierungsbezirk table not found')
 
+        if death_table.xpath('thead/tr')[0].xpath('th/text()')[0] != 'Landkreis/Stadt':
+            raise Exception('ERROR: Todesfälle table not found')
+
+        # Deaths
+        death_data = {}
+        death_sum = 0
+        for row in death_table.xpath('tbody/tr'):
+            cells = row.xpath('td/text()')
+
+            if not cells:
+                continue
+
+            if cells[0] == 'Gesamt':
+                break
+
+            county = self._normalize_county(cells[0].strip())
+            death = int(cells[1].strip())
+            death_sum += death
+
+            death_data[county] = death
+
         # Counties
         data = []
+        infected_sum = 0
         for row in counties_table.xpath('tr'):
             cells = row.xpath('td/text()')
 
@@ -137,6 +160,12 @@ class CoronaParser:
             infected_str = cells[1].strip()
 
             infected = int(infected_str)
+            infected_sum += infected
+
+            if county in death_data:
+                death = death_data[county]
+            else:
+                death = 0
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -147,12 +176,12 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
         # Districts
-        infected_sum = 0
         for row in district_table.xpath('.//tr'):
             cells = row.xpath('.//td/text()')
 
@@ -166,7 +195,6 @@ class CoronaParser:
             infected_str = cells[1].strip()
 
             infected = int(infected_str)
-            infected_sum += infected
 
             data.append({
                 'measurement': 'infected_de_state',
