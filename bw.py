@@ -52,7 +52,7 @@ class CoronaParser:
         self.db = db
         self.tree = tree
         self.wb = openpyxl.load_workbook(doc_bytes)
-        self.ws = self.wb['Fälle Coronavirus in BW']
+        self.ws = self.wb['Infizierte Coronavirus in BW']
 
         locale.setlocale(locale.LC_TIME, "de_DE.utf8")
 
