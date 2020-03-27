@@ -92,7 +92,7 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_text = self.tree.xpath('//table/thead/tr/th')[2].xpath('text()')[1].strip()
+        dt_text = self.tree.xpath('//table/thead/tr/th')[1].xpath('text()')[1].strip()
         dt = datetime.strptime(dt_text, 'Stand %d.%m').replace(year=2020, hour=10).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         table = self.tree.xpath('//table/tbody/tr')
@@ -100,30 +100,23 @@ class CoronaParser:
         # Counties
         data = []
         infected_sum = 0
-        death_sum = 0
         for row in table:
             cells = row.xpath('td')
 
             if not cells:
                 continue
 
+            if len(cells) != 2:
+                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
+
             if cells[0].text.strip() == 'SUMME':
                 continue
 
             county = self._normalize_county(cells[0].text.strip())
-            infected_str = cells[2].text.strip()
-            death_str = cells[3].text
-            if death_str:
-                death_str = death_str.strip()
+            infected_str = cells[1].text.strip()
 
             infected = int(infected_str)
             infected_sum += infected
-
-            if death_str and '*' not in death_str:
-                death = int(death_str)
-                death_sum += death
-            else:
-                death = 0
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -134,8 +127,7 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected),
-                    'death': death
+                    'p10k': self._calculate_p10k(county, infected)
                 }
             })
 
@@ -148,8 +140,7 @@ class CoronaParser:
             'fields': {
                 'count': infected_sum,
                 'p10k': self._calculate_state_p10k(infected_sum),
-                'p100k': self._calculate_state_p100k(infected_sum),
-                'death': death_sum
+                'p100k': self._calculate_state_p100k(infected_sum)
             }
         })
 
