@@ -101,17 +101,17 @@ class CoronaParser:
         infected_sum = 0
         death_sum = 0
         for row in table[1:]:
-            cells = row.xpath('td/p/strong/text()')
+            cells = row.xpath('td')
 
             if not cells:
                 continue
 
-            county = self._normalize_county(cells[0].strip())
-            infected_str = cells[1].strip()
-            death_str = cells[-1].strip()
-
-            if county == 'Brandenburg gesamt':
+            if cells[0].xpath('p/strong')[0].text.strip() == 'Brandenburg gesamt':
                 continue
+
+            county = self._normalize_county(cells[0].xpath('p/strong')[0].text.strip())
+            infected_str = cells[2].xpath('p')[0].text.replace('*', '').strip()
+            death_str = cells[-1].xpath('p/strong')[0].text.replace('*', '').strip()
 
             if infected_str == '---':
                 infected = 0
