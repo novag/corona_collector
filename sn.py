@@ -102,8 +102,8 @@ class CoronaParser:
     def parse(self):
         dt_array = self.tree.xpath('//div[@class="text-col"]')[1].xpath('p/text()')
         for dt_text in dt_array:
-            if dt_text.startswith('Stand:'):
-                dt = datetime.strptime(dt_text, 'Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+            if 'Stand:' in dt_text:
+                dt = datetime.strptime(dt_text.split('|\xa0')[-1], 'Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
                 break
 
         table = self.tree.xpath('//table')[0]
