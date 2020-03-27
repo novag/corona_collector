@@ -11,7 +11,7 @@ from datetime import datetime
 from lxml import html
 
 
-DEBUG = false
+DEBUG = False
 
 STATE = 'Bayern'
 STATE_SHORT = 'BY'
