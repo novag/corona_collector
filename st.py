@@ -166,7 +166,7 @@ class CoronaParser:
         return dt
 
 
-data_url = 'https://ms.sachsen-anhalt.de/themen/gesundheit/aktuell/coronavirus/'
+data_url = 'https://ms.sachsen-anhalt.de/themen/gesundheit/aktuell/coronavirus/fallzahlen/'
 if len(sys.argv) == 2:
     data_url = sys.argv[1]
 
