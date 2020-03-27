@@ -5,6 +5,7 @@ import io
 import json
 import locale
 import os
+import re
 import requests
 import sys
 import traceback
@@ -93,10 +94,15 @@ class CoronaParser:
 
     def parse(self):
         dt_text = self.tree.xpath('//section[contains(@class, "th-box")]//div[@class="frame frame-default frame-type-text frame-layout-0"]/h3/strong/text()')[0]
+        result = re.findall(r'(\(Stand: .+?\))', dt_text)
+        if not result:
+            raise ValueError('ERROR: dt text not found')
+        dt_text = result[0]
+
         try:
-            dt = datetime.strptime(dt_text, 'Zahlen, Daten (Stand: %d. %B %Y, %H Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+            dt = datetime.strptime(dt_text, '(Stand: %d. %B %Y, %H Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
-            dt = datetime.strptime(dt_text, 'Zahlen, Daten (Stand: %d. %B %Y)').replace(hour=13).strftime('%Y-%m-%dT%H:%M:%SZ')
+            dt = datetime.strptime(dt_text, '(Stand: %d. %B %Y)').replace(hour=12).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         table = self.tree.xpath('//table[@class="table table-striped"]')[0]
 
@@ -114,7 +120,7 @@ class CoronaParser:
             if not thcell or not cells:
                 continue
 
-            if len(cells) != 6:
+            if len(cells) != 7:
                 raise Exception('ERROR: invalid cell length: {}'.format(len(cells)))
 
             if thcell[0].strip() == 'Summe':
@@ -122,7 +128,7 @@ class CoronaParser:
 
             county = self._normalize_county(thcell[0].strip())
             infected_str = cells[1].strip()
-            death_str = cells[5].strip()
+            death_str = cells[6].strip()
 
             if infected_str:
                 infected = int(infected_str)
