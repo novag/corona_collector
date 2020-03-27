@@ -128,7 +128,7 @@ else:
         title = a.text
         href = a.get('href')
 
-        if title.startswith('Saarländisches Gesundheitsministerium bestätigt'):
+        if 'Saarländisches Gesundheitsministerium bestätigt' in title:
             data_url = 'https://www.saarland.de{}'.format(href)
             break
 
