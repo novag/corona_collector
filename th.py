@@ -115,7 +115,7 @@ class CoronaParser:
         death_sum = 0
         for row in table.xpath('tbody/tr'):
             thcell = row.xpath('th/text()')
-            cells = row.xpath('td/text()')
+            cells = row.xpath('td')
 
             if not thcell or not cells:
                 continue
@@ -127,8 +127,8 @@ class CoronaParser:
                 continue
 
             county = self._normalize_county(thcell[0].strip())
-            infected_str = cells[1].strip()
-            death_str = cells[6].strip()
+            infected_str = cells[1].xpath('text()')[0].strip()
+            death_str = cells[6].xpath('text()')[0].strip()
 
             if infected_str:
                 infected = int(infected_str)
