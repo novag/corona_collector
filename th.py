@@ -93,7 +93,7 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_text = self.tree.xpath('//section[contains(@class, "th-box")]//div[@class="frame frame-default frame-type-text frame-layout-0"]/h3/strong/text()')[0]
+        dt_text = self.tree.xpath('//section[contains(@class, "th-box")]//div[@class="frame frame-default frame-type-text frame-layout-0"]/h2/strong/text()')[0]
         result = re.findall(r'(\(Stand: .+?\))', dt_text)
         if not result:
             raise ValueError('ERROR: dt text not found')
