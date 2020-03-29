@@ -3,6 +3,7 @@
 import influxdb
 import io
 import json
+import locale
 import os
 import requests
 import sys
@@ -49,6 +50,8 @@ class CoronaParser:
         self.db = db
         self.tree = tree
 
+        locale.setlocale(locale.LC_TIME, "de_DE.utf8")
+
     def _store(self, data):
         if DEBUG:
             print(data)
@@ -63,17 +66,22 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _normalize_county(self, county, is_city):
-        county = county.replace('Altenkirchen', 'Altenkirchen (Westerwald)')
-        county = county.replace('Bitburg-Prüm', 'Eifelkreis Bitburg-Prüm')
-        county = county.replace('Rhein-Hunsrück', 'Rhein-Hunsrück-Kreis')
-        county = county.replace('Südliche Weinstr.', 'Südliche Weinstraße')
-
         if is_city:
+            county = county.replace('KS ', '')
+
             county = county.replace('Frankenthal', 'Frankenthal (Pfalz)')
-            county = county.replace('Landau i.d. Pfalz', 'Landau in der Pfalz')
+            county = county.replace('Landau i.d.Pfalz', 'Landau in der Pfalz')
             county = county.replace('Ludwigshafen', 'Ludwigshafen am Rhein')
             county = county.replace('Neustadt Weinst.', 'Neustadt an der Weinstraße')
+
             county = '{} (Stadt)'.format(county)
+        else:
+            county = county.replace('LK ', '')
+
+            county = county.replace('Altenkirchen', 'Altenkirchen (Westerwald)')
+            county = county.replace('Bitburg-Prüm', 'Eifelkreis Bitburg-Prüm')
+            county = county.replace('Rhein-Hunsrück', 'Rhein-Hunsrück-Kreis')
+            county = county.replace('Südliche Weinstr.', 'Südliche Weinstraße')
 
         return county
 
@@ -102,13 +110,12 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_str = self.tree.xpath('//table/tbody/tr/td[@colspan="3"]/text()')[0]
-        dt = datetime.strptime(dt_str, '%d.%m. %H.%M Uhr')
-        dt = dt.replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_str = self.tree.xpath('//table/parent::div')[0].xpath('p[contains(text(), "Stand:")]/text()')[0]
+        dt = datetime.strptime(dt_str, 'Stand: %H.%M Uhr, %d. %B').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
-        if rows[0].xpath('td/strong/text()')[0] != 'Landkreis':
+        if rows[0].xpath('td/descendant-or-self::*/text()')[0] != 'Landkreis':
             raise Exception('ERROR: Landkreis table not found')
 
         data = []
