@@ -104,69 +104,41 @@ class CoronaParser:
 
     def parse(self):
         dt_text = self.tree.xpath('//p[@class="bildunterschrift"]/strong/text()')[1]
-        dt = datetime.strptime(dt_text, '*Stand: %d.%m.%Y %H:%M Uhr.').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(dt_text, 'Stand: %d.%m.%Y %H:%M Uhr.').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        overview_table = self.tree.xpath('//table')[0]
-        thdeath = self.tree.xpath('//table')[0].xpath('thead/tr/th/text()')[2]
-        if thdeath != 'Todesfälle':
-            raise ValueError('ERROR: CoronaParser: death count not found')
-        death_str = self.tree.xpath('//table')[0].xpath('tbody/tr')[-1].xpath('td/text()')[2]
-        death_sum = int(death_str)
-
-        tables = self.tree.xpath('//div[@class="row abstand_unten"]//table')
-        counties_table = tables[0]
-        district_table = tables[1]
-        death_table = tables[2]
+        counties_table = self.tree.xpath('//div[@class="row abstand_unten"]//table')[0]
 
         if counties_table.xpath('tr')[0].xpath('th/span/text()')[0] != 'Landkreis/Stadt':
             raise Exception('ERROR: Landkreis table not found')
 
-        if district_table.xpath('tr')[0].xpath('th/text()')[0] != 'Regierungsbezirk':
-            raise Exception('ERROR: Regierungsbezirk table not found')
-
-        if death_table.xpath('thead/tr')[0].xpath('th/text()')[0] != 'Landkreis/Stadt':
-            raise Exception('ERROR: Todesfälle table not found')
-
-        # Deaths
-        death_data = {}
-        death_sum = 0
-        for row in death_table.xpath('tbody/tr'):
-            cells = row.xpath('td/text()')
-
-            if not cells:
-                continue
-
-            if cells[0] == 'Gesamt':
-                break
-
-            county = self._normalize_county(cells[0].strip())
-            death = int(cells[1].strip())
-            death_sum += death
-
-            death_data[county] = death
-
         # Counties
         data = []
         infected_sum = 0
+        death_sum = 0
         for row in counties_table.xpath('tr'):
             cells = row.xpath('td/text()')
 
             if not cells:
                 continue
 
+            if len(cells) != 6:
+                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
+
             if cells[0] == 'Gesamtergebnis':
                 break
 
             county = self._normalize_county(cells[0].strip())
-            infected_str = cells[1].strip()
+            infected_str = cells[1].replace('.', '').strip()
+            death_str = cells[4].replace('.', '').strip()
 
             infected = int(infected_str)
             infected_sum += infected
 
-            if county in death_data:
-                death = death_data[county]
-            else:
+            if death_str == '-':
                 death = 0
+            else:
+                death = int(death_str)
+                death_sum += death
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -179,33 +151,6 @@ class CoronaParser:
                     'count': infected,
                     'p10k': self._calculate_p10k(county, infected),
                     'death': death
-                }
-            })
-
-        # Districts
-        for row in district_table.xpath('.//tr'):
-            cells = row.xpath('.//td/text()')
-
-            if not cells:
-                continue
-
-            if cells[0] == 'Gesamtergebnis':
-                break
-
-            county = cells[0].strip()
-            infected_str = cells[1].strip()
-
-            infected = int(infected_str)
-
-            data.append({
-                'measurement': 'infected_de_state',
-                'tags': {
-                    'state': STATE,
-                    'district': county
-                },
-                'time': dt,
-                'fields': {
-                    'count': infected
                 }
             })
 
