@@ -80,7 +80,7 @@ class CoronaParser:
         dt_text = self.tree.xpath('//p[@class="article-date"]/text()')[0]
         dt = datetime.strptime(dt_text, ' %d. %B %Y %H:%M\xa0Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        paragraph = self.tree.xpath('//div[@class="richtext"]/p/text()')[0]
+        paragraph = ' '.join(self.tree.xpath('//div[@class="richtext"]/p/text()'))
 
         matches = re.findall(r'insgesamt ([\d\.]+) angestiegen', paragraph)
         if not matches:
@@ -125,7 +125,7 @@ else:
         title = a.xpath('h3/span[contains(@class, "teaser-headline")]/text()')[0].strip()
         href = a.xpath('@href')[0]
 
-        if title == 'Informationen zum aktuellen Stand COVID-19 in Hamburg':
+        if title == 'Informationen zum aktuellen Stand COVID-19 in Hamburg' or 'Coronavirus: ' in title:
             data_url = href
             break
 
