@@ -122,9 +122,9 @@ class CoronaParser:
                 continue
  
             county = self._normalize_county(cells[0].xpath('descendant-or-self::*/text()')[0].strip())
-            infected_str = cells[1].xpath('descendant-or-self::*/text()')[0].strip().replace('.', '')
+            infected_str = cells[1].xpath('descendant-or-self::*/text()')[0].strip().replace('.', '').split(' (+')[0]
             if not infected_str:
-                infected_str = cells[1].xpath('descendant-or-self::*/text()')[1].strip().replace('.', '')
+                infected_str = cells[1].xpath('descendant-or-self::*/text()')[1].strip().replace('.', '').split(' (+')[0]
             death_str = cells[3].xpath('descendant-or-self::*/text()')[0].strip().replace('.', '')
 
             infected = int(infected_str)
