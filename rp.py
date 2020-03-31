@@ -70,6 +70,7 @@ class CoronaParser:
             county = county.replace('KS ', '')
 
             county = county.replace('Frankenthal', 'Frankenthal (Pfalz)')
+            county = county.replace('Landau i.d. Pfalz', 'Landau in der Pfalz')
             county = county.replace('Landau i.d.Pfalz', 'Landau in der Pfalz')
             county = county.replace('Ludwigshafen', 'Ludwigshafen am Rhein')
             county = county.replace('Neustadt Weinst.', 'Neustadt an der Weinstraße')
@@ -110,8 +111,9 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_str = self.tree.xpath('//table/parent::div')[0].xpath('p[contains(text(), "Stand:")]/text()')[0]
-        dt = datetime.strptime(dt_str, 'Stand: %H.%M Uhr, %d. %B').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_str = self.tree.xpath('//table/tbody/tr/td[@colspan="3"]/text()')[0]
+        dt = datetime.strptime(dt_str, '%d.%m. %H.%M Uhr')
+        dt = dt.replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
