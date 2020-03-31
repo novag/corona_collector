@@ -121,7 +121,7 @@ class CoronaParser:
             if not cells:
                 continue
 
-            if len(cells) != 6:
+            if len(cells) != 7:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             if cells[0] == 'Gesamtergebnis':
@@ -129,7 +129,7 @@ class CoronaParser:
 
             county = self._normalize_county(cells[0].strip())
             infected_str = cells[1].replace('.', '').strip()
-            death_str = cells[4].replace('.', '').strip()
+            death_str = cells[5].replace('.', '').strip()
 
             infected = int(infected_str)
             infected_sum += infected
