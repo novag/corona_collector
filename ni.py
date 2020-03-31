@@ -108,12 +108,17 @@ class CoronaParser:
         # Counties
         data = []
         infected_sum = 0
+        death_sum = 0
         for row in self.data:
             county = self._normalize_county(row['Landkreis'].strip())
             infected_str = row['bestätigte Fälle'].strip()
+            death_str = row['verstorbene Fälle'].strip()
 
             infected = int(infected_str)
             infected_sum += infected
+
+            death = int(death_str)
+            death_sum += death
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -124,7 +129,8 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
@@ -137,7 +143,8 @@ class CoronaParser:
             'fields': {
                 'count': infected_sum,
                 'p10k': self._calculate_state_p10k(infected_sum),
-                'p100k': self._calculate_state_p100k(infected_sum)
+                'p100k': self._calculate_state_p100k(infected_sum),
+                'death': death_sum
             }
         })
 
