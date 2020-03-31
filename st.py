@@ -3,6 +3,7 @@
 import influxdb
 import io
 import json
+import locale
 import os
 import re
 import requests
@@ -50,6 +51,8 @@ class CoronaParser:
         self.db = db
         self.tree = tree
 
+        locale.setlocale(locale.LC_TIME, "de_DE.utf8")
+
     def _store(self, data):
         if DEBUG:
             print(data)
@@ -64,12 +67,17 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _normalize_county(self, county):
-        county = county.replace('LK ', '')
+        county = county.replace('\r\n ', '')
 
         if county.startswith('SK '):
+            if county == 'SK Dessau':
+                county = county.replace('Dessau', 'Dessau-Roßlau')
             county = county.replace('Halle', 'Halle (Saale)')
             county = county.replace('SK ', '')
             county = '{} (Stadt)'.format(county)
+        elif county.startswith('LK '):
+            county = county.replace('Anhalt Bitterfeld', 'Anhalt-Bitterfeld')
+            county = county.replace('LK ', '')
 
         return county
 
@@ -98,39 +106,36 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_text = self.tree.xpath('//div[@class="ce-bodytext"]/p/text()')[0]
-        result = re.findall(r'(\(Stand.+\))', dt_text)
+        date_text = self.tree.xpath('//span[@class="pm_datum"]/text()')[0]
+        time_text = self.tree.xpath('//p[@class="MsoNormal"]/span/text()')[0]
+        result = re.findall(r'(\(Stand.+\))', time_text)
         if not result:
             raise ValueError('ERROR: CoronaParser: dt text not found')
 
-        try:
-            dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H:%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
-        except ValueError:
-            try:
-                dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
-            except ValueError:
-                dt = datetime.strptime(result[0], '(Stand %d.%m.%Y; %H. Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_text = '{} {}'.format(date_text, result[0])
+        dt = datetime.strptime(dt_text, 'Magdeburg, den %d. %B %Y (Stand %H:%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
         data = []
         infected_sum = 0
         death_sum = 0
-        for row in rows:
+        for row in rows[1:]:
             cells = row.xpath('td')
+            bigcell = cells[0].xpath('p/b/span/text()')
 
             if len(cells) != 4:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
-            if cells[0].xpath('descendant-or-self::*/text()')[0] == 'Sachsen-Anhalt':
+            if bigcell and (bigcell[0] == 'Melde-Landkreis' or bigcell[0] == 'Gesamtergebnis'):
                 continue
 
-            county = self._normalize_county(cells[0].text.strip())
+            county = self._normalize_county(cells[0].xpath('p/span/text()')[0].strip())
 
-            infected = int(cells[1].text.strip())
+            infected = int(cells[1].xpath('p/span/text()')[0].strip())
             infected_sum += infected
 
-            death = int(cells[3].text.strip())
+            death = int(cells[3].xpath('p/span/text()')[0].strip())
             death_sum += death
 
             data.append({
@@ -166,7 +171,7 @@ class CoronaParser:
         return dt
 
 
-data_url = 'https://ms.sachsen-anhalt.de/themen/gesundheit/aktuell/coronavirus/fallzahlen/'
+data_url = 'http://www.presse.sachsen-anhalt.de/index.php?cmd=get&id=909596&identifier=3813e08c96fabf41b28834ea1f0b8cf7'
 if len(sys.argv) == 2:
     data_url = sys.argv[1]
 
