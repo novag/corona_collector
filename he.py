@@ -116,12 +116,15 @@ class CoronaParser:
             if not cells:
                 continue
 
-            if cells[0] == 'Kreis/Stadt' or cells[0] == 'Gesamt':
+            if cells[0] == 'Kreis/Stadt' or cells[0] == 'Gesamt' or cells[0] == '\xa0':
                 continue
+
+            if len(cells) != 5:
+                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             county = self._normalize_county(cells[0].strip())
             infected_str = cells[1].strip()
-            death_str = cells[3].strip()
+            death_str = cells[2].strip()
 
             infected = int(infected_str)
             infected_sum += infected
