@@ -104,7 +104,7 @@ class CoronaParser:
 
     def parse(self):
         dt_text = self.tree.xpath('//p[@class="bildunterschrift"]/strong/text()')[1]
-        dt = datetime.strptime(dt_text, 'Stand: %d.%m.%Y %H:%M Uhr.').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(dt_text, 'Stand: %d.%m.%Y, %H:%M Uhr.').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         counties_table = self.tree.xpath('//div[@class="row abstand_unten"]//table')[0]
 
