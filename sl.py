@@ -86,11 +86,11 @@ class CoronaParser:
         hour = int(result[0])
         dt = dt.replace(hour=hour, minute=0).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        result = re.findall(r'(\d+) bestätigte Fälle', message)
+        result = re.findall(r'([\d\.]+) bestätigte Fälle', message)
         if not result:
             raise ValueError('ERROR: CoronaParser: infected count not found')
 
-        infected_sum = int(result[0])
+        infected_sum = int(result[0].replace('.', ''))
 
         data = [{
             'measurement': 'infected_de',
@@ -128,7 +128,7 @@ else:
         title = a.text
         href = a.get('href')
 
-        if 'Saarländisches Gesundheitsministerium bestätigt' in title:
+        if 'Saarländisches Gesundheitsministerium bestätigt' in title or 'COVID-19 Infizierte' in title:
             data_url = 'https://www.saarland.de{}'.format(href)
             break
 
