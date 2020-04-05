@@ -111,9 +111,8 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_str = self.tree.xpath('//table/tbody/tr/td[@colspan="3"]/text()')[0]
-        dt = datetime.strptime(dt_str, '%d.%m. %H.%M Uhr')
-        dt = dt.replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_str = self.tree.xpath('//table/tbody/tr[last()]/td/text()')[0]
+        dt = datetime.strptime(dt_str, 'Stand: %d.%m.%Y; %H Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
@@ -124,7 +123,7 @@ class CoronaParser:
         infected_sum = 0
         death_sum = 0
         is_city = False
-        for row in rows[1:]:
+        for row in rows[1:-1]:
             cells = row.xpath('td/descendant-or-self::*/text()')
 
             if not cells:
