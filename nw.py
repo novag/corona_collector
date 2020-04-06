@@ -105,7 +105,7 @@ class CoronaParser:
     def parse(self):
         dt_text = self.tree.xpath('//div[@class="group-introduction field-group-div"]//div[@class="field-item even"]/p/text()')[1]
         dt_text = dt_text.split('Stand: ')[-1]
-        dt = datetime.strptime(dt_text, '%d. %B %Y, %H.%M Uhr. ').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(dt_text, '%d. %B %Y, %H:%M Uhr. ').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         counties_table = self.tree.xpath('//table')[0]
 
