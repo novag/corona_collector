@@ -125,7 +125,7 @@ class CoronaParser:
             infected_str = cells[1].xpath('descendant-or-self::*/text()')[0].replace('.', '').split('(+')[0].strip()
             if not infected_str:
                 infected_str = cells[1].xpath('descendant-or-self::*/text()')[1].replace('.', '').split('(+')[0].strip()
-            death_str = cells[3].xpath('descendant-or-self::*/text()')[0].replace('.', '').strip()
+            death_str = cells[3].xpath('descendant-or-self::*/text()')[0].replace('.', '').split('(+')[0].strip()
 
             infected = int(infected_str)
             infected_sum += infected
