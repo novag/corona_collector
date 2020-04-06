@@ -180,7 +180,7 @@ class CoronaParser:
         return self.dt
 
 
-data_url = 'https://sozialministerium.baden-wuerttemberg.de/de/gesundheit-pflege/gesundheitsschutz/infektionsschutz-hygiene/informationen-zu-coronavirus/'
+data_url = 'https://sozialministerium.baden-wuerttemberg.de/de/gesundheit-pflege/gesundheitsschutz/infektionsschutz-hygiene/informationen-zu-coronavirus/lage-in-baden-wuerttemberg/'
 if len(sys.argv) == 2:
     data_url = sys.argv[1]
 
