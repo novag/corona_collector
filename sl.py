@@ -74,23 +74,21 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        message = ' '.join(self.tree.xpath('//div[@class="textchapter_frame"]/p/descendant-or-self::*/text()'))
+        dt_text = self.tree.xpath('//main[@class="main row"]/div/p/strong/text()')[0].strip()
+        dt = datetime.strptime(dt_text, '%d.%m.%Y - %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        dt_text = self.tree.xpath('//div[@class="textchapter_teaser_frame"]/text()')[0].strip()
-        dt = datetime.strptime(dt_text, 'Pressemitteilung vom %d.%m.%Y - %H:%M Uhr')
+        message = ' '.join(self.tree.xpath('//main[@class="main row"]/div/p/text()'))
 
-        result = re.findall(r'\((\d+) Uhr\)', message)
-        if not result:
-            raise ValueError('ERROR: CoronaParser: time not found')
-
-        hour = int(result[0])
-        dt = dt.replace(hour=hour, minute=0).strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        result = re.findall(r'([\d\.]+) bestätigte Fälle', message)
-        if not result:
+        infected_matches = re.findall(r'infizierten Personen ist landesweit auf ([\d\.]+)', message)
+        if not infected_matches:
             raise ValueError('ERROR: CoronaParser: infected count not found')
 
-        infected_sum = int(result[0].replace('.', ''))
+        death_matches = re.findall(r'Zahl der Verstorbenen steigt landesweit auf ([\d\.]+)', message)
+        if not death_matches:
+            raise ValueError('ERROR: CoronaParser: death count not found')
+
+        infected_sum = int(infected_matches[0].replace('.', ''))
+        death_sum = int(death_matches[0].replace('.', ''))
 
         data = [{
             'measurement': 'infected_de',
@@ -101,7 +99,8 @@ class CoronaParser:
             'fields': {
                 'count': infected_sum,
                 'p10k': self._calculate_state_p10k(infected_sum),
-                'p100k': self._calculate_state_p100k(infected_sum)
+                'p100k': self._calculate_state_p100k(infected_sum),
+                'death': death_sum
             }
         }]
 
@@ -110,31 +109,13 @@ class CoronaParser:
         return dt
 
 
-search_url = 'https://www.saarland.de/7250.htm'
-
+data_url = 'https://corona.saarland.de/DE/service/chronologie-corona/chronologie-corona_node.html'
 if len(sys.argv) == 2:
     data_url = sys.argv[1]
-else:
-    r = requests.get(search_url, headers={'User-Agent': CONFIG['user_agent']})
-    if not r.ok:
-        print('ERROR: failed to fetch posts, status code: {}'.format(r.stats_code))
-        sys.exit(1)
-
-    tree = html.fromstring(r.text)
-    posts = tree.xpath('//div[@class="contentteaserlist_frame"]/div[@class="contentteaserlist_row"]')
-    data_url = None
-    for post in posts:
-        a = post.xpath('.//h4/a')[0]
-        title = a.text
-        href = a.get('href')
-
-        if 'Saarländisches Gesundheitsministerium bestätigt' in title or 'COVID-19 Infizierte' in title:
-            data_url = 'https://www.saarland.de{}'.format(href)
-            break
 
 r = requests.get(data_url, headers={'User-Agent': CONFIG['user_agent']})
 if not r.ok:
-    print('ERROR: failed to search overview, status code: {}'.format(r.stats_code))
+    print('ERROR: failed to fetch data, status code: {}'.format(r.stats_code))
     sys.exit(1)
 
 if DEBUG:
