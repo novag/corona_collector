@@ -132,7 +132,7 @@ class CoronaParser:
             else:
                 infected = 0
 
-            if death_str:
+            if death_str and death_str != '-':
                 death = int(death_str)
                 death_sum += death
             else:
