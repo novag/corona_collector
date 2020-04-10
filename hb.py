@@ -114,8 +114,8 @@ class CoronaParser:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             county = self._normalize_county(thcell[0].strip())
-            infected_str = cells[0].strip()
-            death_str = cells[3]
+            infected_str = cells[0].split('(+')[0].strip()
+            death_str = cells[3].split('(+')[0].strip()
 
             infected = int(infected_str)
             infected_sum += infected
