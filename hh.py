@@ -82,12 +82,21 @@ class CoronaParser:
 
         paragraph = ' '.join(self.tree.xpath('//div[@class="richtext"]/p/text()'))
 
-        matches = re.findall(r'insgesamt ([\d\.]+) angestiegen', paragraph)
-        if not matches:
-            raise ValueError('ERROR: CoronaParser: infected number not found')
+        infected_matches = re.findall(r'insgesamt ([\d\.]+) angestiegen', paragraph)
+        if not infected_matches:
+            infected_matches = re.findall(r'insgesamt bei ([\d\.]+)\.', paragraph)
+            if not infected_matches:
+                raise ValueError('ERROR: CoronaParser: infected number not found')
 
-        infected_str = matches[0].replace('.', '')
+        death_matches = re.findall(r'([\d\.]+) Personen mit einer COVID-19-Infektion verstorben', paragraph)
+        if not death_matches:
+            raise ValueError('ERROR: CoronaParser: death number not found')
+
+        infected_str = infected_matches[0].replace('.', '')
         infected_sum = int(infected_str)
+
+        death_str = death_matches[0].replace('.', '')
+        death_sum = int(death_str)
 
         data = [{
             'measurement': 'infected_de',
@@ -98,7 +107,8 @@ class CoronaParser:
             'fields': {
                 'count': infected_sum,
                 'p10k': self._calculate_state_p10k(infected_sum),
-                'p100k': self._calculate_state_p100k(infected_sum)
+                'p100k': self._calculate_state_p100k(infected_sum),
+                'death': death_sum
             }
         }]
 
