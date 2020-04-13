@@ -112,7 +112,7 @@ class CoronaParser:
 
     def parse(self):
 
-        dt_str = self.tree.xpath('//a[@class="download"]/parent::p')[0].xpath('text()')[2]
+        dt_str = self.tree.xpath('//a[@class="download"]/parent::p')[0].xpath('text()')[-1]
         dt = datetime.strptime(dt_str, ' Stand: %d.%m.%Y (%H:%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
