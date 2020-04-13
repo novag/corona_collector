@@ -111,12 +111,12 @@ class CoronaParser:
         infected_sum = 0
         death_sum = 0
         for row in table.xpath('tr'):
-            cells = row.xpath('td/p/text()')
+            cells = row.xpath('td/p/descendant-or-self::*/text()')
 
             if not cells:
                 continue
 
-            if cells[0] == 'Kreis/Stadt' or cells[0] == 'Gesamt' or cells[0] == '\xa0':
+            if cells[0] == 'Kreis/Stadt' or cells[0] == 'Gesamt' or cells[0] == 'Gesamtergebnis' or cells[0] == '\xa0':
                 continue
 
             if len(cells) != 5:
