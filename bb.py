@@ -93,8 +93,8 @@ class CoronaParser:
     def parse(self):
         table = self.tree.xpath('//table/tbody/tr')
 
-        dt_text = table[0].xpath('td')[2].xpath('p/strong/text()')[-1]
-        dt = datetime.strptime(dt_text, 'Stand: %d.%m., %H:%M Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_text = table[0].xpath('td')[2].xpath('p/strong/text()')[-1].replace(' ', '')
+        dt = datetime.strptime(dt_text, 'Stand:%d.%m.,%H:%MUhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         # Counties
         data = []
