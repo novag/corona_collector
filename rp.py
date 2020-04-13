@@ -111,8 +111,9 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_str = self.tree.xpath('//table/tbody/tr[last()]/td/text()')[0]
-        dt = datetime.strptime(dt_str, 'Stand: %d.%m.%y; %H.%M Uhr ').strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        dt_str = self.tree.xpath('//a[@class="download"]/parent::p')[0].xpath('text()')[2]
+        dt = datetime.strptime(dt_str, ' Stand: %d.%m.%Y (%H:%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
