@@ -78,8 +78,7 @@ class CoronaParser:
 
     def parse(self):
         dt_text = self.tree.xpath('//p[@class="article-date"]/text()')[0]
-        #dt = datetime.strptime(dt_text, ' %d. %B %Y %H:%M\xa0Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
-        dt = datetime.strptime(dt_text, ' %d. %B %Y').replace(hour=13, minute=30).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(dt_text, ' %d. %B %Y %H:%M\xa0Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         paragraph = ' '.join(self.tree.xpath('//div[@class="richtext"]/p/text()'))
 
