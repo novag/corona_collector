@@ -80,11 +80,11 @@ class CoronaParser:
         posts = self.tree.xpath('//ul[@class="list-autoteaser"]/li')
         for post in posts:
             title = post.xpath('div[@class="span10 cell text"]/a/text()')[0]
-            results = re.findall(r'(\d+) bestätigte Fälle', title)
+            results = re.findall(r'([\d\.]+) bestätigte Fälle', title)
             if results:
                 dt_text = post.xpath('div[@class="span2 cell date"]/text()')[0]
                 dt = datetime.strptime(dt_text, '%d.%m.%Y %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
-                infected_sum = int(results[0])
+                infected_sum = int(results[0].replace('.', ''))
 
                 break
 
