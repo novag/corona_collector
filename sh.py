@@ -92,21 +92,22 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_text = self.tree.xpath('//table/thead/tr/th')[1].xpath('text()')[1].strip()
-        dt = datetime.strptime(dt_text, 'Stand %d.%m.').replace(year=2020, hour=10).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_text = self.tree.xpath('//table[@class="covid19 kreistabelle"]/parent::div/p/text()')[0].strip()
+        dt = datetime.strptime(dt_text, 'Datenstand: %d.%m.%Y %H:%M:%S.').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        table = self.tree.xpath('//table/tbody/tr')
+        table = self.tree.xpath('//table[@class="covid19 kreistabelle"]/tbody/tr')
 
         # Counties
         data = []
         infected_sum = 0
+        death_sum = 0
         for row in table:
             cells = row.xpath('td')
 
             if not cells:
                 continue
 
-            if len(cells) != 2:
+            if len(cells) != 5:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             if cells[0].text.strip() == 'SUMME':
@@ -114,9 +115,13 @@ class CoronaParser:
 
             county = self._normalize_county(cells[0].text.strip())
             infected_str = cells[1].text.strip()
+            death_str = cells[3].text.strip()
 
             infected = int(infected_str)
             infected_sum += infected
+
+            death = int(death_str)
+            death_sum += death
 
             data.append({
                 'measurement': 'infected_de_state',
@@ -127,7 +132,8 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
@@ -140,7 +146,8 @@ class CoronaParser:
             'fields': {
                 'count': infected_sum,
                 'p10k': self._calculate_state_p10k(infected_sum),
-                'p100k': self._calculate_state_p100k(infected_sum)
+                'p100k': self._calculate_state_p100k(infected_sum),
+                'death': death_sum
             }
         })
 
@@ -149,7 +156,7 @@ class CoronaParser:
         return dt
 
 
-data_url = 'https://www.schleswig-holstein.de/DE/Landesregierung/I/Presse/_documents/Corona-Liste_Kreise.html'
+data_url = 'https://www.schleswig-holstein.de/DE/Schwerpunkte/Coronavirus/Zahlen/zahlen_node.html'
 if len(sys.argv) == 2:
     data_url = sys.argv[1]
 
