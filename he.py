@@ -66,12 +66,18 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _normalize_county(self, county):
-        county = county.replace('LK ', '')
-
-        county = county.replace('SK Offenbach', 'Offenbach am Main (Stadt)')
         if county.startswith('SK '):
             county = county.replace('SK ', '')
+
+            county = county.replace('Frankfurtam Main', 'Frankfurt am Main')
+            county = county.replace('Offenbach', 'Offenbach am Main')
             county = '{} (Stadt)'.format(county)
+        elif county.startswith('LK '):
+            county = county.replace('LK ', '')
+            county = county.replace('Hoch-taunuskreis', 'Hochtaunuskreis')
+            county = county.replace('Odenwald-kreis', 'Odenwaldkreis')
+            county = county.replace('Vogelsberg-kreis', 'Vogelsbergkreis')
+            county = county.replace('Wetterau-kreis', 'Wetteraukreis')
 
         return county
 
@@ -111,20 +117,24 @@ class CoronaParser:
         infected_sum = 0
         death_sum = 0
         for row in table.xpath('tr'):
-            cells = row.xpath('td/p/descendant-or-self::*/text()')
+            cells = row.xpath('td')
+            cell0_text = ''.join(cells[0].xpath('p/descendant-or-self::*/text()'))
+            cell1_text = cells[1].xpath('p/descendant-or-self::*/text()')[0]
 
             if not cells:
                 continue
 
-            if cells[0] == 'Kreis/Stadt' or cells[0] == 'Gesamt' or cells[0] == 'Gesamtergebnis' or cells[0] == '\xa0':
+            if cell1_text == 'kumuliert' or cell0_text.startswith('Kreis/') or cell0_text == 'Gesamt' or cell0_text == 'Gesamtergebnis' or cell0_text == '\xa0':
                 continue
 
-            if len(cells) != 5:
+            if len(cells) != 6:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
-            county = self._normalize_county(cells[0].strip())
-            infected_str = cells[1].strip()
-            death_str = cells[2].strip()
+            cell3_text = cells[3].xpath('p/descendant-or-self::*/text()')[0]
+
+            county = self._normalize_county(cell0_text.strip())
+            infected_str = cell1_text.strip()
+            death_str = cell3_text.strip()
 
             infected = int(infected_str)
             infected_sum += infected
