@@ -74,7 +74,7 @@ class CoronaParser:
             county = '{} (Stadt)'.format(county)
         elif county.startswith('LK '):
             county = county.replace('LK ', '')
-            county = county.replace('Hoch-taunuskreis', 'Hochtaunuskreis')
+            county = county.replace('Hoch-taunus-kreis', 'Hochtaunuskreis')
             county = county.replace('Odenwald-kreis', 'Odenwaldkreis')
             county = county.replace('Vogelsberg-kreis', 'Vogelsbergkreis')
             county = county.replace('Wetterau-kreis', 'Wetteraukreis')
@@ -106,7 +106,7 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_array = self.tree.xpath('//div[@class="he_content_body"]/h3/text()')[0].split(',', 3)
+        dt_array = self.tree.xpath('//div[@class="he_content_body"]/p/strong/text()')[0].split(',', 3)
         dt_text = ''.join(dt_array[1:3])
         dt = datetime.strptime(dt_text, ' Stand %d. %B %Y %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
@@ -127,7 +127,7 @@ class CoronaParser:
             if cell1_text == 'kumuliert' or cell0_text.startswith('Kreis/') or cell0_text == 'Gesamt' or cell0_text == 'Gesamtergebnis' or cell0_text == '\xa0':
                 continue
 
-            if len(cells) != 6:
+            if len(cells) != 7:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             cell3_text = cells[3].xpath('p/descendant-or-self::*/text()')[0]
