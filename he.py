@@ -74,7 +74,7 @@ class CoronaParser:
             county = '{} (Stadt)'.format(county)
         elif county.startswith('LK '):
             county = county.replace('LK ', '')
-            county = county.replace('Hoch-taunus-kreis', 'Hochtaunuskreis')
+            county = county.replace('Hochtaunus-kreis', 'Hochtaunuskreis')
             county = county.replace('Odenwald-kreis', 'Odenwaldkreis')
             county = county.replace('Vogelsberg-kreis', 'Vogelsbergkreis')
             county = county.replace('Wetterau-kreis', 'Wetteraukreis')
