@@ -102,7 +102,7 @@ class CoronaParser:
         death_sum = 0
         for row in rows[1:]:
             thcell = row.xpath('th/text()')
-            cells = row.xpath('td/text()')
+            cells = row.xpath('td')
 
             if not thcell or not cells:
                 continue
@@ -114,8 +114,8 @@ class CoronaParser:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             county = self._normalize_county(thcell[0].strip())
-            infected_str = cells[0].split('(+')[0].strip()
-            death_str = cells[3].split('(+')[0].strip()
+            infected_str = cells[0].text.split('(+')[0].strip()
+            death_str = cells[3].text.split('(+')[0].strip()
 
             infected = int(infected_str)
             infected_sum += infected
