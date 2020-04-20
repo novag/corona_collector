@@ -100,7 +100,7 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_array = self.tree.xpath('//div[@class="text-col"]')[2].xpath('p/text()')
+        dt_array = self.tree.xpath('//div[@class="text-col"]')[1].xpath('p/text()')
         for dt_text in dt_array:
             if 'Stand:' in dt_text:
                 dt = datetime.strptime(dt_text.split('|\xa0')[-1], 'Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
