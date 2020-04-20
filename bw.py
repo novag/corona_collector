@@ -52,7 +52,8 @@ class CoronaParser:
         self.db = db
         self.tree = tree
         self.wb = openpyxl.load_workbook(doc_bytes)
-        self.ws = self.wb['Infizierte Coronavirus in BW']
+        self.ws_infected = self.wb['Infizierte Coronavirus in BW']
+        self.ws_death = self.wb['Todesfälle Coronavirus in BW']
 
         locale.setlocale(locale.LC_TIME, "de_DE.utf8")
 
@@ -110,7 +111,7 @@ class CoronaParser:
         dt_row = 0
         county_row = 0
 
-        for row in self.ws.iter_rows(min_col=self.ws.min_column, min_row=self.ws.min_row, max_row=self.ws.max_row, max_col=self.ws.min_column):
+        for row in self.ws_infected.iter_rows(min_col=self.ws_infected.min_column, min_row=self.ws_infected.min_row, max_row=self.ws_infected.max_row, max_col=self.ws_infected.min_column):
             cell_a = row[0]
 
             if not cell_a.value:
@@ -121,22 +122,16 @@ class CoronaParser:
                 county_row = cell_a.row + 2
                 break
 
-        excel_dt = self.ws['B'][dt_row - 1].value
+        excel_dt = self.ws_infected['B'][dt_row - 1].value
         web_dt = self._parse_web_datetime()
 
         if excel_dt.date() != web_dt.date():
             raise Exception('WARN: Date mismatch: No datetime available yet. Skipping run...')
 
-        death_str = ' '.join(self.tree.xpath('//aside/parent::div/div[@class="text" and @data-rtr-content="#read"]/p/text()'))
-        result = re.findall(r'(\d+)(?:\xa0|\s)Todesfälle', death_str)
-        if not result:
-            raise ValueError('ERROR: CoronaParser: death count not found')
-
-        death_sum = int(result[0])
-
         data = []
         infected_sum = 0
-        for row in self.ws.iter_rows(min_col=self.ws.min_column, min_row=county_row, max_row=self.ws.max_row, max_col=self.ws.min_column + 1):
+        death_sum = 0
+        for row in self.ws_infected.iter_rows(min_col=self.ws_infected.min_column, min_row=county_row, max_row=self.ws_infected.max_row, max_col=self.ws_infected.min_column + 1):
             county = self._normalize_county(row[0].value.strip())
 
             if not county:
@@ -148,6 +143,9 @@ class CoronaParser:
             infected = row[1].value
             infected_sum += infected
 
+            death = self.ws_death[row[1].coordinate].value
+            death_sum += death
+
             data.append({
                 'measurement': 'infected_de_state',
                 'tags': {
@@ -157,7 +155,8 @@ class CoronaParser:
                 'time': self.dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
                 }
             })
 
