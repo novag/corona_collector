@@ -125,12 +125,12 @@ class CoronaParser:
             if not cells:
                 continue
 
-            if len(cells) != 6:
+            if len(cells) != 4:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             county = self._normalize_county(cells[0].strip())
             infected_str = cells[1].replace('.', '').strip()
-            death_str = cells[3].replace('.', '').strip()
+            death_str = cells[2].replace('.', '').strip()
 
             if infected_str:
                 infected = int(infected_str)
