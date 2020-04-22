@@ -106,14 +106,12 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        date_text = self.tree.xpath('//span[@class="pm_datum"]/text()')[0]
-        time_text = self.tree.xpath('//p[@class="MsoNormal"]/span/text()')[0]
-        result = re.findall(r'(\(Stand.+\))', time_text)
+        dt_text = self.tree.xpath('//p[@class="MsoNormal"]/span/text()')[0]
+        result = re.findall(r'(\(Stand:.+\d{1,2}:\d{1,2})', dt_text)
         if not result:
             raise ValueError('ERROR: CoronaParser: dt text not found')
 
-        dt_text = '{} {}'.format(date_text, result[0])
-        dt = datetime.strptime(dt_text, 'Magdeburg, den %d. %B %Y (Stand %H:%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(result[0], '(Stand: %d. %B %Y, %H:%M').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
@@ -171,13 +169,30 @@ class CoronaParser:
         return dt
 
 
-data_url = 'http://www.presse.sachsen-anhalt.de/index.php?cmd=get&id=909596&identifier=3813e08c96fabf41b28834ea1f0b8cf7'
+search_url = 'https://ms.sachsen-anhalt.de/presse/'
+
 if len(sys.argv) == 2:
     data_url = sys.argv[1]
+else:
+    r = requests.get(search_url, headers={'User-Agent': CONFIG['user_agent']})
+    if not r.ok:
+        print('ERROR: failed to fetch posts, status code: {}'.format(r.stats_code))
+        sys.exit(1)
+
+    tree = html.fromstring(r.text)
+    posts = tree.xpath('//div[@id="oldpdb"]/div/h2[@class="tx-rssdisplay-item-title"]/a')
+    data_url = None
+    for post in posts:
+        title = post.text
+        href = post.xpath('@href')[0]
+
+        if 'Coronavirus infiziert' in title:
+            data_url = href
+            break
 
 r = requests.get(data_url, headers={'User-Agent': CONFIG['user_agent']})
 if not r.ok:
-    print('ERROR: failed to fetch data, status code: {}'.format(r.stats_code))
+    print('ERROR: failed to search overview, status code: {}'.format(r.stats_code))
     sys.exit(1)
 
 if DEBUG:
