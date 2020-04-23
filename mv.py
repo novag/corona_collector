@@ -94,9 +94,9 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        table = self.tree.xpath('//table/tr')
+        rows = self.tree.xpath('//table/tr')
 
-        dt_text = ' '.join(table[1].xpath('td/p/strong/text()')[2:4])
+        dt_text = ' '.join(rows[1].xpath('td/p/strong/text()')[4:7])
         try:
             dt = datetime.strptime(dt_text, 'Stand %d.%m. %H:%M Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
@@ -108,11 +108,14 @@ class CoronaParser:
         # Counties
         data = []
         infected_sum = 0
-        for row in table[2:]:
+        for row in rows[2:]:
             cells = row.xpath('td/p/text()')
 
             if not cells:
                 continue
+
+            if len(cells) != 3:
+                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             county = self._normalize_county(cells[0].strip())
             infected_str = cells[-1].strip()
