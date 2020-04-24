@@ -96,7 +96,7 @@ class CoronaParser:
     def parse(self):
         rows = self.tree.xpath('//table/tr')
 
-        dt_text = ' '.join(rows[1].xpath('td/p/strong/text()')[4:7])
+        dt_text = ' '.join(rows[1].xpath('td/p/strong/text()')[2:4])
         try:
             dt = datetime.strptime(dt_text, 'Stand %d.%m. %H:%M Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
