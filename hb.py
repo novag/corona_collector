@@ -173,7 +173,7 @@ else:
         title = post.xpath('a/text()')[0].strip()
         href = post.xpath('a/@href')[0]
 
-        if title.startswith('Aktueller Stand Corona in Bremen') or title.startswith('Update Fallzahlen Corona'):
+        if title.startswith('Aktueller Stand Corona') or title.startswith('Update Fallzahlen Corona'):
             data_url = 'https://www.senatspressestelle.bremen.de/{}'.format(href)
             break
 
