@@ -93,7 +93,7 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_array = self.tree.xpath('//section[contains(@class, "th-box")]//div[@class="frame frame-default frame-type-text frame-layout-0"]/*[self::h2 or self::h3]/text()')
+        dt_array = self.tree.xpath('//section[contains(@class, "th-box")]//div[@class="frame frame-default frame-type-text frame-layout-0"]/*[self::h2 or self::h3]//text()')
         for dt_text in dt_array:
             if 'Stand: ' in dt_text:
                 result = re.findall(r'(\(Stand: .+?\))', dt_text)
