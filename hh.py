@@ -83,17 +83,19 @@ class CoronaParser:
         except:
             dt = datetime.strptime(dt_text, ' %d. %B %Y').replace(hour=13).strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        paragraph = ' '.join(self.tree.xpath('//div[@class="richtext"]/p/text()'))
+        paragraph = ' '.join(self.tree.xpath('//div[@class="richtext"]/p//text()'))
 
         infected_matches = re.findall(r'insgesamt ([\d\.]+) angestiegen', paragraph)
         if not infected_matches:
-            infected_matches = re.findall(r'insgesamt bei ([\d\.]+)\.', paragraph)
+            infected_matches = re.findall(r'insgesamt bei +([\d\.]+)', paragraph)
             if not infected_matches:
                 raise ValueError('ERROR: CoronaParser: infected number not found')
 
         death_matches = re.findall(r'([\d\.]+) Personen mit einer COVID-19-Infektion verstorben', paragraph)
         if not death_matches:
-            raise ValueError('ERROR: CoronaParser: death number not found')
+            death_matches = re.findall(r'([\d\.]+) +Personen die COVID-19-Infektion als todesursächlich', paragraph)
+            if not death_matches:
+                raise ValueError('ERROR: CoronaParser: death number not found')
 
         infected_str = infected_matches[0].replace('.', '')
         infected_sum = int(infected_str)
