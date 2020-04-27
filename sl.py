@@ -83,7 +83,7 @@ class CoronaParser:
         if not infected_matches:
             raise ValueError('ERROR: CoronaParser: infected count not found')
 
-        death_matches = re.findall(r'Zahl der Verstorbenen steigt landesweit auf ([\d\.]+)', message)
+        death_matches = re.findall(r'Zahl der Verstorbenen: ([\d\.]+)', message)
         if not death_matches:
             raise ValueError('ERROR: CoronaParser: death count not found')
 
