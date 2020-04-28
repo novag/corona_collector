@@ -4,6 +4,7 @@ import influxdb
 import io
 import json
 import os
+import re
 import requests
 import sys
 import traceback
@@ -92,18 +93,20 @@ class CoronaParser:
         dt_text = ' '.join(self.tree.xpath('//div[@class="singleview"]/div[@class="teaserText"]/p/strong/text()')[:2])
         dt = datetime.strptime(dt_text, 'Datenstand %d.%m.%Y %H Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        body_paragraph = self.tree.xpath('//div[@class="bodyText"]/p/strong/text()')
+        body_paragraph = ' '.join(self.tree.xpath('//div[@class="bodyText"]/p//text()'))
 
-        if body_paragraph[0] != 'Gemeldete Fälle':
+        infected_matches = re.findall(r'Gemeldete Fälle: +([\d\.]+) ', body_paragraph)
+        if not infected_matches:
             raise ValueError('ERROR: infected count not found')
 
-        infected_str = body_paragraph[1].replace('.', '')
+        infected_str = infected_matches[0].replace('.', '')
         infected_sum = int(infected_str)
 
-        if not body_paragraph[5].startswith('Todesfälle'):
-            raise ValueError('ERROR: infected count not found')
+        death_matches = re.findall(r'Todesfälle: +([\d\.]+) ', body_paragraph)
+        if not death_matches:
+            raise ValueError('ERROR: death count not found')
 
-        death_str = body_paragraph[5].split(': ')[1].strip().replace('.', '')
+        death_str = death_matches[0].replace('.', '')
         death_sum = int(death_str)
 
         data = [{
