@@ -118,8 +118,9 @@ class CoronaParser:
         death_sum = 0
         for row in table.xpath('tbody/tr'):
             cells = row.xpath('td')
+            cell0_text = cells[0].xpath('descendant-or-self::*/text()')[0].strip()
 
-            if cells[0].xpath('descendant-or-self::*/text()')[0].strip().startswith('Gesamtzahl'):
+            if cell0_text.startswith('Gesamtzahl') or 'esamt' in cell0_text:
                 continue
  
             county = self._normalize_county(cells[0].xpath('descendant-or-self::*/text()')[0].strip())
