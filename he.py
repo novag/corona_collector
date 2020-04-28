@@ -127,14 +127,14 @@ class CoronaParser:
             if cell1_text == 'kumuliert' or cell0_text.startswith('Kreis/') or cell0_text == 'Gesamt' or cell0_text == 'Gesamtergebnis' or cell0_text == '\xa0':
                 continue
 
-            if len(cells) != 7:
+            if len(cells) != 6:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
-            cell3_text = cells[3].xpath('p/descendant-or-self::*/text()')[0]
+            cell2_text = cells[2].xpath('p/descendant-or-self::*/text()')[0]
 
             county = self._normalize_county(cell0_text.strip())
             infected_str = cell1_text.strip()
-            death_str = cell3_text.strip()
+            death_str = cell2_text.strip()
 
             infected = int(infected_str)
             infected_sum += infected
