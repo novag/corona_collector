@@ -106,37 +106,37 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_array = self.tree.xpath('//p[@class="MsoNormal"]/span/text()')
+        dt_array = self.tree.xpath('//p/descendant-or-self::span/text()')
         for dt_text in dt_array:
             if 'Stand:' in dt_text:
-                result = re.findall(r'(\(Stand:.+\d{1,2}:\d{1,2})', dt_text)
+                result = re.findall(r'(\(Stand:.+Uhr)', dt_text)
                 break
         if not result:
             raise ValueError('ERROR: CoronaParser: dt text not found')
 
-        dt = datetime.strptime(result[0], '(Stand: %d. %B %Y, %H:%M').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(result[0], '(Stand: %d. %B %Y, %H.%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
         data = []
         infected_sum = 0
         death_sum = 0
-        for row in rows[1:]:
+        for row in rows:
             cells = row.xpath('td')
-            bigcell = cells[0].xpath('p/b/span/text()')
+            bigcell = cells[0].xpath('p//text()')
 
             if len(cells) != 4:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
-            if bigcell and (bigcell[0] == 'Melde-Landkreis' or bigcell[0] == 'Gesamtergebnis'):
+            if bigcell and (bigcell[0].strip() == 'Melde-Landkreis' or bigcell[0].strip() == 'Gesamtergebnis'):
                 continue
 
-            county = self._normalize_county(cells[0].xpath('p/span/text()')[0].strip())
+            county = self._normalize_county(cells[0].xpath('p//text()')[0].strip())
 
-            infected = int(cells[1].xpath('p/span/text()')[0].strip())
+            infected = int(cells[1].xpath('p//text()')[0].strip())
             infected_sum += infected
 
-            death = int(cells[3].xpath('p/span/text()')[0].strip())
+            death = int(cells[3].xpath('p//text()')[0].strip())
             death_sum += death
 
             data.append({
