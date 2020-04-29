@@ -120,9 +120,12 @@ class CoronaParser:
         infected_sum = 0
         death_sum = 0
         for row in counties_table.xpath('tbody/tr'):
-            cells = row.xpath('td/text()')
+            cells = row.xpath('td//text()')
 
             if not cells:
+                continue
+
+            if cells[0] == 'Gesamt':
                 continue
 
             if len(cells) != 4:
