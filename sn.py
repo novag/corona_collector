@@ -120,6 +120,9 @@ class CoronaParser:
             cells = row.xpath('td')
             cell0_text = cells[0].xpath('descendant-or-self::*/text()')[0].strip()
 
+            if len(cells) != 6:
+                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
+
             if cell0_text.startswith('Gesamtzahl') or 'esamt' in cell0_text:
                 continue
  
@@ -127,7 +130,7 @@ class CoronaParser:
             infected_str = cells[1].xpath('descendant-or-self::*/text()')[0].replace('.', '').split('(')[0].strip()
             if not infected_str:
                 infected_str = cells[1].xpath('descendant-or-self::*/text()')[1].replace('.', '').split('(')[0].strip()
-            death_str = cells[3].xpath('descendant-or-self::*/text()')[0].replace('.', '').split('(')[0].strip()
+            death_str = cells[4].xpath('descendant-or-self::*/text()')[0].replace('.', '').split('(')[0].strip()
 
             infected = int(infected_str)
             infected_sum += infected
