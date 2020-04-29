@@ -97,35 +97,42 @@ class CoronaParser:
     def parse(self):
         rows = self.tree.xpath('//table/tr')
 
-        dt_text = ' '.join(rows[1].xpath('td/p/strong/text()'))
-        result = re.findall(r'(Stand .+)', dt_text)
+        dt_paragraph = ' '.join(rows[1].xpath('td/p/strong/text()'))
+        result = re.findall(r'(Stand .+)', dt_paragraph)
         if not result:
             raise ValueError('ERROR: CoronaParser: dt text not found')
+        
+        dt_text = result[0].strip()
+
         try:
-            dt = datetime.strptime(result[0], 'Stand %d.%m. %H:%M Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
+            dt = datetime.strptime(dt_text, 'Stand %d.%m. %H:%M Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
             try:
-                dt = datetime.strptime(result[0], 'Stand %d.%m. %H:%M').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
+                dt = datetime.strptime(dt_text, 'Stand %d.%m. %H:%M').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
             except ValueError:
-                dt = datetime.strptime(result[0], 'Stand %d.%m. %H Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
+                dt = datetime.strptime(dt_text, 'Stand %d.%m. %H Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         # Counties
         data = []
         infected_sum = 0
-        for row in rows[2:]:
-            cells = row.xpath('td/p/text()')
+        for row in rows:
+            cells = row.xpath('td')
+            cell0_text = cells[0].xpath('p//text()')[0]
 
             if not cells:
                 continue
 
-            if len(cells) != 3:
+            if len(cells) == 1:
+                continue
+
+            if cell0_text.startswith('Corona-positiv') or cell0_text.startswith('Kreis/') or cell0_text == 'Summe':
+                continue
+
+            if len(cells) != 4:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
-            county = self._normalize_county(cells[0].strip())
-            infected_str = cells[-1].strip()
-
-            if county == 'SUMME':
-                continue
+            county = self._normalize_county(cell0_text.strip())
+            infected_str = cells[2].xpath('p/text()')[0].strip()
 
             infected = int(infected_str)
             infected_sum += infected
