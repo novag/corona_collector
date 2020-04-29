@@ -91,11 +91,14 @@ class CoronaParser:
 
     def parse(self):
         dt_text = ' '.join(self.tree.xpath('//div[@class="singleview"]/div[@class="teaserText"]/p/strong/text()')[:2])
-        dt = datetime.strptime(dt_text, 'Datenstand %d.%m.%Y %H Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+        try:
+            dt = datetime.strptime(dt_text, 'Datenstand %d.%m.%Y %H Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+        except:
+            dt = datetime.strptime(dt_text, 'Datenstand %d.%m.%Y :').replace(hour=10).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         body_paragraph = ' '.join(self.tree.xpath('//div[@class="bodyText"]/p//text()'))
 
-        infected_matches = re.findall(r'Gemeldete Fälle: +([\d\.]+) ', body_paragraph)
+        infected_matches = re.findall(r'Gemeldete Fälle\s?:\s+([\d\.]+) ', body_paragraph)
         if not infected_matches:
             raise ValueError('ERROR: infected count not found')
 
