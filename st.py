@@ -114,7 +114,7 @@ class CoronaParser:
         if not result:
             raise ValueError('ERROR: CoronaParser: dt text not found')
 
-        dt = datetime.strptime(result[0], '(Stand: %d. %B %Y, %H.%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(result[0], '(Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
