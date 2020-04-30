@@ -117,13 +117,14 @@ class CoronaParser:
         infected_sum = 0
         for row in rows:
             cells = row.xpath('td')
-            cell0_text = cells[0].xpath('p//text()')[0]
 
             if not cells:
                 continue
 
             if len(cells) == 1:
                 continue
+
+            cell0_text = cells[0].xpath('p//text()')[0]
 
             if cell0_text.startswith('Corona-positiv') or cell0_text.startswith('Kreis/') or cell0_text == 'Summe':
                 continue
