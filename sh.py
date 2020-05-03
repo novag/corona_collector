@@ -3,8 +3,8 @@
 import influxdb
 import io
 import json
+import locale
 import os
-import re
 import requests
 import sys
 import traceback
@@ -50,6 +50,8 @@ class CoronaParser:
         self.db = db
         self.tree = tree
 
+        locale.setlocale(locale.LC_TIME, "de_DE.utf8")
+
     def _store(self, data):
         if DEBUG:
             print(data)
@@ -90,29 +92,52 @@ class CoronaParser:
         return round(infected * 100000 / population, 2)
 
     def parse(self):
-        dt_text = ' '.join(self.tree.xpath('//div[@class="singleview"]/div[@class="teaserText"]/p/strong/text()')[:2])
-        try:
-            dt = datetime.strptime(dt_text, 'Datenstand %d.%m.%Y %H Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
-        except:
-            dt = datetime.strptime(dt_text, 'Datenstand %d.%m.%Y :').replace(hour=10).strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_text = self.tree.xpath('//table[@class="covid19 kreistabelle"]/parent::div/p/text()')[0].strip()
+        dt = datetime.strptime(dt_text, 'Datenstand: %d.%m.%Y %H:%M:%S.').strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        body_paragraph = ' '.join(self.tree.xpath('//div[@class="bodyText"]/p//text()'))
+        table = self.tree.xpath('//table[@class="covid19 kreistabelle"]/tbody/tr')
 
-        infected_matches = re.findall(r'Gemeldete Fälle\s?:\s+([\d\.]+) ', body_paragraph)
-        if not infected_matches:
-            raise ValueError('ERROR: infected count not found')
+        # Counties
+        data = []
+        infected_sum = 0
+        death_sum = 0
+        for row in table:
+            cells = row.xpath('td')
 
-        infected_str = infected_matches[0].replace('.', '')
-        infected_sum = int(infected_str)
+            if not cells:
+                continue
 
-        death_matches = re.findall(r'Todesfälle: +([\d\.]+) ', body_paragraph)
-        if not death_matches:
-            raise ValueError('ERROR: death count not found')
+            if len(cells) != 5:
+                raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
-        death_str = death_matches[0].replace('.', '')
-        death_sum = int(death_str)
+            if cells[0].text.strip() == 'SUMME':
+                continue
 
-        data = [{
+            county = self._normalize_county(cells[0].text.strip())
+            infected_str = cells[1].text.strip()
+            death_str = cells[3].text.strip()
+
+            infected = int(infected_str)
+            infected_sum += infected
+
+            death = int(death_str)
+            death_sum += death
+
+            data.append({
+                'measurement': 'infected_de_state',
+                'tags': {
+                    'state': STATE,
+                    'county': county
+                },
+                'time': dt,
+                'fields': {
+                    'count': infected,
+                    'p10k': self._calculate_p10k(county, infected),
+                    'death': death
+                }
+            })
+
+        data.append({
             'measurement': 'infected_de',
             'tags': {
                 'state': STATE
@@ -124,7 +149,7 @@ class CoronaParser:
                 'p100k': self._calculate_state_p100k(infected_sum),
                 'death': death_sum
             }
-        }]
+        })
 
         self._store(data)
 
