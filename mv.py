@@ -124,9 +124,9 @@ class CoronaParser:
             if len(cells) == 1:
                 continue
 
-            cell0_text = cells[0].xpath('p//text()')[0]
+            cell0_text = cells[0].xpath('p//text()')[0].strip()
 
-            if cell0_text.startswith('Corona-positiv') or cell0_text.startswith('Kreis/') or cell0_text == 'Summe':
+            if not cell0_text or cell0_text.startswith('Corona-positiv') or cell0_text.startswith('Kreis/') or cell0_text == 'Summe':
                 continue
 
             if len(cells) != 4:
