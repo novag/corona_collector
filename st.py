@@ -109,12 +109,19 @@ class CoronaParser:
         dt_array = self.tree.xpath('//p/descendant-or-self::span/text()')
         for dt_text in dt_array:
             if 'Stand:' in dt_text:
+                dt_text = dt_text.replace('\n', '').replace('\r', '')
                 result = re.findall(r'(\(Stand:.+Uhr)', dt_text)
                 break
         if not result:
             raise ValueError('ERROR: CoronaParser: dt text not found')
 
-        dt = datetime.strptime(result[0], '(Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+        try:
+            dt = datetime.strptime(result[0], '(Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+        except ValueError:
+            try:
+                dt = datetime.strptime(result[0], '(Stand: %d. %B, %H:%M Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
+            except ValueError:
+                dt = datetime.strptime(result[0], '(Stand: %d.%B, %H:%M Uhr').replace(year=2020).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
