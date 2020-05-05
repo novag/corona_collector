@@ -129,7 +129,7 @@ class CoronaParser:
             if not cell0_text or cell0_text.startswith('Corona-positiv') or cell0_text.startswith('Kreis/') or cell0_text == 'Summe':
                 continue
 
-            if len(cells) != 3:
+            if len(cells) != 4:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             county = self._normalize_county(cell0_text.strip())
