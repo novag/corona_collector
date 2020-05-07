@@ -124,7 +124,7 @@ class CoronaParser:
             if not thcell or not cells:
                 continue
 
-            if len(cells) != 7:
+            if len(cells) != 8:
                 raise Exception('ERROR: invalid cell length: {}'.format(len(cells)))
 
             if thcell[0].strip() == 'Summe':
@@ -132,7 +132,7 @@ class CoronaParser:
 
             county = self._normalize_county(thcell[0].strip())
             infected_str = cells[1].xpath('text()')[0].strip()
-            death_str = cells[6].xpath('text()')[0].strip()
+            death_str = cells[7].xpath('text()')[0].strip()
 
             if infected_str:
                 infected = int(infected_str)
