@@ -63,6 +63,7 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _normalize_county(self, county):
+        county = county.replace('Brandenburg a. d. H.', 'Brandenburg an der Havel')
         county = county.replace('Brandenburg a. d. Havel', 'Brandenburg an der Havel')
 
         return county
