@@ -107,7 +107,7 @@ class CoronaParser:
                 dt = datetime.strptime(dt_text.split('|\xa0')[-1], 'Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
                 break
 
-        table = self.tree.xpath('//table')[0]
+        table = self.tree.xpath('//table')[1]
 
         if table.xpath('thead/tr/th/text()')[0] != 'Kreisfreie Stadt / Landkreis':
             raise Exception('ERROR: table not found')
