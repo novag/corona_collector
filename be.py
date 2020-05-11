@@ -63,15 +63,16 @@ class CoronaParser:
         except influxdb.exceptions.InfluxDBClientError as e:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
-    def _calculate_state_p10k(self, infected):
+    def _calculate_state_per_population(self, infected, per_population):
         population = POPULATION['state'][STATE_SHORT]
 
-        return round(infected * 10000 / population, 2)
+        return round(infected * per_population / population, 2)
+
+    def _calculate_state_p10k(self, infected):
+        return self._calculate_state_per_population(infected, 10000)
 
     def _calculate_state_p100k(self, infected):
-        population = POPULATION['state'][STATE_SHORT]
-
-        return round(infected * 100000 / population, 2)
+        return self._calculate_state_per_population(infected, 100000)
 
     def parse(self):
         dt = None

@@ -70,7 +70,7 @@ class CoronaParser:
 
         return county
 
-    def _calculate_p10k(self, county, infected):
+    def _calculate_per_population(self, county, infected, per_population):
         try:
             if county.endswith('(Stadt)'):
                 raw_county = county.replace(' (Stadt)', '')
@@ -78,21 +78,28 @@ class CoronaParser:
             else:
                 population = POPULATION['county'][STATE_SHORT][county]
 
-            return round(infected * 10000 / population, 2)
+            return round(infected * per_population / population, 2)
         except:
             notify('{} not found in population database.'.format(county))
 
         return None
 
-    def _calculate_state_p10k(self, infected):
+    def _calculate_p10k(self, county, infected):
+        return self._calculate_per_population(county, infected, 10000)
+
+    def _calculate_p100k(self, county, infected):
+        return self._calculate_per_population(county, infected, 100000)
+
+    def _calculate_state_per_population(self, infected, per_population):
         population = POPULATION['state'][STATE_SHORT]
 
-        return round(infected * 10000 / population, 2)
+        return round(infected * per_population / population, 2)
+
+    def _calculate_state_p10k(self, infected):
+        return self._calculate_state_per_population(infected, 10000)
 
     def _calculate_state_p100k(self, infected):
-        population = POPULATION['state'][STATE_SHORT]
-
-        return round(infected * 100000 / population, 2)
+        return self._calculate_state_per_population(infected, 100000)
 
     def parse(self):
         rows = self.tree.xpath('//table/tr')
@@ -147,7 +154,8 @@ class CoronaParser:
                 'time': dt,
                 'fields': {
                     'count': infected,
-                    'p10k': self._calculate_p10k(county, infected)
+                    'p10k': self._calculate_p10k(county, infected),
+                    'p100k': self._calculate_p100k(county, infected)
                 }
             })
 
