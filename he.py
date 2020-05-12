@@ -140,8 +140,8 @@ class CoronaParser:
             cell2_text = cells[2].xpath('p/descendant-or-self::*/text()')[0]
 
             county = self._normalize_county(cell0_text.strip())
-            infected_str = cell1_text.strip()
-            death_str = cell2_text.strip()
+            infected_str = cell1_text.strip().replace('.', '')
+            death_str = cell2_text.strip().replace('.', '')
 
             infected = int(infected_str)
             infected_sum += infected
