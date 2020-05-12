@@ -5,6 +5,7 @@ import io
 import json
 import locale
 import os
+import re
 import requests
 import sys
 import traceback
@@ -110,11 +111,11 @@ class CoronaParser:
         dt_array = self.tree.xpath('//div[@class="text-col"]')[1].xpath('p/text()')
         for dt_text in dt_array:
             if 'Stand:' in dt_text:
-                dt_text = dt_text.strip()
-                dt = datetime.strptime(dt_text.split('|\xa0')[-1], 'Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+                results = re.findall(r'(Stand: .+ Uhr)', dt_text)
+                dt = datetime.strptime(results[0], 'Stand: %d. %B %Y, %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
                 break
 
-        table = self.tree.xpath('//table')[1]
+        table = self.tree.xpath('//table')[0]
 
         if table.xpath('thead/tr/th/text()')[0] != 'Kreisfreie Stadt / Landkreis':
             raise Exception('ERROR: table not found')
