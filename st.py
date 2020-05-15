@@ -113,7 +113,7 @@ class CoronaParser:
         return self._calculate_state_per_population(infected, 100000)
 
     def parse(self):
-        dt_array = self.tree.xpath('//p/descendant-or-self::span/text()')
+        dt_array = self.tree.xpath('//p/descendant-or-self::span//text()')
         for dt_text in dt_array:
             if 'Stand:' in dt_text:
                 dt_text = dt_text.replace('\n', '').replace('\r', '')
