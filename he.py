@@ -131,7 +131,12 @@ class CoronaParser:
             if not cells:
                 continue
 
-            if cell1_text == 'kumuliert' or cell0_text.startswith('Kreis/') or cell0_text == 'Gesamt' or cell0_text == 'Gesamtergebnis' or cell0_text == '\xa0':
+            if cell1_text == 'kumuliert' or \
+                    cell0_text.startswith('Kreis/') or \
+                    cell0_text == 'Gesamt' or \
+                    cell0_text == 'gesamt' or \
+                    cell0_text == 'Gesamtergebnis' or \
+                    cell0_text == '\xa0':
                 continue
 
             if len(cells) != 6:
