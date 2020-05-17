@@ -88,11 +88,9 @@ class CoronaParser:
 
         infected_matches = re.findall(r'insgesamt ([\d\.]+) angestiegen', paragraph)
         if not infected_matches:
-            infected_matches = re.findall(r'insgesamt bei +([\d\.]+)', paragraph)
+            infected_matches = re.findall(r'(?:insgesamt|liegt nun|damit) bei +([\d\.]+)', paragraph)
             if not infected_matches:
-                infected_matches = re.findall(r'liegt nun bei +([\d\.]+)', paragraph)
-                if not infected_matches:
-                    raise ValueError('ERROR: CoronaParser: infected number not found')
+                raise ValueError('ERROR: CoronaParser: infected number not found')
 
         death_matches = re.findall(r'([\d\.]+) Personen mit einer COVID-19-Infektion verstorben', paragraph)
         if not death_matches:
