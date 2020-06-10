@@ -121,7 +121,8 @@ class CoronaParser:
         dt_array = self.tree.xpath('//a[@class="download"]/parent::p/parent::div/p/text()')
         for dt_text in dt_array:
             if 'Stand: ' in dt_text:
-                dt = datetime.strptime(dt_text, ' Stand: %d.%m.%Y (%H:%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
+                dt_text = dt_text.strip().replace('\xa0', ' ')
+                dt = datetime.strptime(dt_text, 'Stand: %d.%m.%Y (%H:%M Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         rows = self.tree.xpath('//table/tbody/tr')
 
