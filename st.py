@@ -204,7 +204,7 @@ else:
         title = post.text
         href = post.xpath('@href')[0]
 
-        if 'Coronavirus infiziert' in title:
+        if 'Coronavirus infiziert' in title or 'Corona-Infektionen' in title:
             data_url = href
             break
 
