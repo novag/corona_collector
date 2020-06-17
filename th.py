@@ -100,7 +100,13 @@ class CoronaParser:
         return self._calculate_state_per_population(infected, 100000)
 
     def parse(self):
-        dt_array = self.tree.xpath('//section[contains(@class, "th-box")]//div[@class="frame frame-default frame-type-text frame-layout-0"]/*[self::h2 or self::h3]//text()')
+        table = self.tree.xpath('//table[@class="table table-striped"]')[0]
+
+        if table.xpath('thead/tr/th[3]/text()')[0] != 'aktueller':
+            raise Exception('ERROR: table not found')
+
+        # Timestamp'
+        dt_array = table.xpath('ancestor::div[@class="frame frame-default frame-type-text frame-layout-0"]/*[self::h2 or self::h3]//text()')
         for dt_text in dt_array:
             if 'Stand: ' in dt_text:
                 result = re.findall(r'(\(Stand: .+?\))', dt_text)
@@ -114,11 +120,6 @@ class CoronaParser:
             dt = datetime.strptime(dt_text, '(Stand: %d. %B %Y, %H Uhr)').strftime('%Y-%m-%dT%H:%M:%SZ')
         except ValueError:
             dt = datetime.strptime(dt_text, '(Stand: %d. %B %Y)').replace(hour=12).strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        table = self.tree.xpath('//table[@class="table table-striped"]')[0]
-
-        if table.xpath('thead/tr/th[3]/text()')[0] != 'aktueller':
-            raise Exception('ERROR: table not found')
 
         # Counties
         data = []
