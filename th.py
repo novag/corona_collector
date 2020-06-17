@@ -187,7 +187,7 @@ class CoronaParser:
         return dt
 
 
-data_url = 'https://www.landesregierung-thueringen.de/corona-bulletin/'
+data_url = 'https://corona.thueringen.de/bulletin'
 if len(sys.argv) == 2:
     data_url = sys.argv[1]
 
