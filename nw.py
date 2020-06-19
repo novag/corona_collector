@@ -67,7 +67,9 @@ class CoronaParser:
             raise Exception('ERROR: CoronaParser: _store: {}'.format(e))
 
     def _normalize_county(self, county):
-        if 'Kreis' in county:
+        county = county.replace('*', '')
+
+        if 'kreis' in county.lower():
             county = county.replace(' (Kreis)', '')
         elif county != 'Aachen & Städteregion Aachen':
             county = county.replace('Mülheim / Ruhr', 'Mülheim an der Ruhr')
