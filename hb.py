@@ -100,7 +100,7 @@ class CoronaParser:
 
         rows = self.tree.xpath('//table/tr')
 
-        if rows[0].xpath('th/text()')[0] != 'Bestätigte Fälle insgesamt':
+        if rows[0].xpath('th/text()')[1] != 'Bestätigte Fälle insgesamt':
             raise Exception('ERROR: table not found')
 
         # Counties
@@ -117,12 +117,12 @@ class CoronaParser:
             if thcell[0].strip() == 'Land Bremen':
                 continue
 
-            if len(cells) != 4:
+            if len(cells) != 5:
                 raise Exception('ERROR: invalid cells length: {}'.format(len(cells)))
 
             county = self._normalize_county(thcell[0].strip())
-            infected_str = cells[0].text.split('(+')[0].strip()
-            death_str = cells[3].text.split('(+')[0].strip()
+            infected_str = cells[1].text.split('(')[0].strip()
+            death_str = cells[4].text.split('(')[0].strip()
 
             infected = int(infected_str)
             infected_sum += infected
