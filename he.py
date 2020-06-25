@@ -113,7 +113,7 @@ class CoronaParser:
         return self._calculate_state_per_population(infected, 100000)
 
     def parse(self):
-        dt_array = self.tree.xpath('//div[@class="he_content_body"]/p//text()')[0].split(',', 3)
+        dt_array = self.tree.xpath('//div[@class="he_content_body"]//strong/text()')[0].split(',', 3)
         dt_text = ''.join(dt_array[1:3])
         dt = datetime.strptime(dt_text, ' Stand %d. %B %Y %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
