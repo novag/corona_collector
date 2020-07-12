@@ -75,12 +75,15 @@ class CoronaParser:
         return self._calculate_state_per_population(infected, 100000)
 
     def parse(self):
-        dt_text = self.tree.xpath('//main[@class="main row"]/div/p/strong/text()')[0].strip()
-        dt = datetime.strptime(dt_text, '%d.%m.%Y - %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+        dt_text = self.tree.xpath('//main[@class="main row"]/div/p/strong/text()')[0].strip().replace('–', '-')
+        try:
+            dt = datetime.strptime(dt_text, '%d.%m.%Y - %H:%M Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
+        except ValueError:
+            dt = datetime.strptime(dt_text, '%d.%m.%Y - %H Uhr').strftime('%Y-%m-%dT%H:%M:%SZ')
 
         message = ' '.join(self.tree.xpath('//main[@class="main row"]/div/p/text()'))
 
-        infected_matches = re.findall(r'infizierten Personen ist landesweit auf ([\d\.]+)', message)
+        infected_matches = re.findall(r'infizierten Personen beträgt landesweit ([\d\.]+)', message)
         if not infected_matches:
             raise ValueError('ERROR: CoronaParser: infected count not found')
 
