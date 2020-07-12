@@ -117,7 +117,7 @@ class CoronaParser:
             if cells[0].xpath('p/strong')[0].text.strip() == 'Brandenburg gesamt':
                 continue
 
-            county = self._normalize_county(cells[0].xpath('p/strong')[0].text.strip())
+            county = self._normalize_county(cells[0].xpath('p/strong')[0].text.replace('*', '').strip())
             infected_str = cells[2].xpath('p')[0].text.replace('*', '').strip()
             death_str = cells[-1].xpath('p')[0].text.replace('*', '').strip()
 
