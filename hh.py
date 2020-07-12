@@ -79,6 +79,7 @@ class CoronaParser:
 
     def parse(self):
         dt_text = self.tree.xpath('//span[@class="chart_publication"]/text()')[0].strip()
+        dt_text = dt_text.replace('Sonnabend', 'Sonntag')
         dt = datetime.strptime(dt_text, 'Stand: %A, %d. %B %Y;').replace(hour=13).strftime('%Y-%m-%dT%H:%M:%SZ')
 
         infected_str = self.tree.xpath('//div[@class="teaser teaser-thumb col-xs-12 col-md-6 col-xl-4"]/div[@class="c_chart one"]/h2[@class="c_chart_h2"]/text()')[0]
